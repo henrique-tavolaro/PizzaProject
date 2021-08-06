@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PizzaProject</string>
+    <string name="add_product_button">add product button</string>
+</resources>
