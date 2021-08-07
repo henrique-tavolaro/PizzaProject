@@ -14,7 +14,6 @@ class GetProducts(
     suspend fun execute(): Flow<DataState<List<Product>>> = flow {
         try {
             emit(DataState.loading())
-
             val products = firestore.getProducts()
 
             emit(DataState.success(products))

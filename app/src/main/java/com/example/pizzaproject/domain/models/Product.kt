@@ -2,29 +2,30 @@ package com.example.pizzaproject.domain.models
 
 import android.os.Parcel
 import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
 
 data class Product(
 
     val id: String = "",
     val name: String = "",
     val price: Double = 0.00,
-    val category: String = ""
+    val category: String = "",
+    val categoryOrder: Int = 0
 
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.readDouble(),
-        parcel.readString()!!
-    ) {
-    }
+        parcel.readString()!!,
+        parcel.readInt()
+    )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(id)
         parcel.writeString(name)
         parcel.writeDouble(price)
         parcel.writeString(category)
+        parcel.writeInt(categoryOrder)
     }
 
     override fun describeContents(): Int {

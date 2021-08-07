@@ -21,6 +21,7 @@ class FirestoreDatasourceImpl @Inject constructor(
     override suspend fun getProducts(): List<Product> {
        return firestore
            .collection(PRODUCTS)
+           .orderBy("categoryOrder")
            .get()
            .await()
            .toObjects(Product::class.java)

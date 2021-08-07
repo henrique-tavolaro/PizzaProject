@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,7 @@ fun ImageCarousel(Image1: Int, Image2: Int, Image3: Int) {
             painter = painterResource(id = drawable.value),
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(vertical = 8.dp)
                 .height(150.dp),
             contentScale = ContentScale.FillWidth,
             contentDescription = "pizza images"
