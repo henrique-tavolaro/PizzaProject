@@ -1,70 +1,62 @@
 package com.example.pizzaproject
 
 
-import CircularIndicator
-import android.os.Build
+import android.app.Application
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material.icons.filled.LocalDrink
-import androidx.compose.material.icons.filled.LocalPizza
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Blue
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.interpolator.view.animation.FastOutLinearInInterpolator
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.plusAssign
+import com.example.pizzaproject.domain.models.CartDetail
+import com.example.pizzaproject.domain.models.Product
 import com.example.pizzaproject.ui.OrdersViewModel
-import com.example.pizzaproject.ui.ProductLazyColumnItem
-import com.example.pizzaproject.ui.composables.CategoryCard
-import com.example.pizzaproject.ui.composables.ImageCarousel
+import com.example.pizzaproject.ui.navigation.Screen
+import com.example.pizzaproject.ui.screens.CartScreen
+import com.example.pizzaproject.ui.screens.CheckOutScreen
+import com.example.pizzaproject.ui.screens.HomeScreen
 import com.example.pizzaproject.ui.theme.PizzaProjectTheme
-import com.example.pizzaproject.ui.theme.StickHeaderColor
+import com.google.accompanist.navigation.animation.AnimatedComposeNavigator
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 
+
+@ExperimentalAnimationApi
+@ExperimentalMaterialApi
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: OrdersViewModel by viewModels()
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    @OptIn(
-        ExperimentalAnimationApi::class,
-        androidx.compose.foundation.ExperimentalFoundationApi::class,
-        androidx.compose.ui.ExperimentalComposeUiApi::class
-    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-
+            val navController = rememberAnimatedNavController()
             val categorySelected = viewModel.categorySelected
             val scrollState = rememberLazyListState()
             val coroutineScope = rememberCoroutineScope()
@@ -72,201 +64,218 @@ class MainActivity : AppCompatActivity() {
             val stickyHeaderIndex1 = viewModel.stickyHeaderIndex1.value
             val stickyHeaderIndex2 = viewModel.stickyHeaderIndex2.value
             val loading = viewModel.loading.value
+            val getTotal = viewModel.totalSum.value
+            val bottomBarVisibility = viewModel.bottomBarVisibility
+            val isCartOpen = viewModel.isCartOpen
+            val cart = viewModel.cart.value
+
             PizzaProjectTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
+                    Log.d("TAG2", cart.toString())
                     Scaffold(
                         topBar = {
                             TopAppBar(
-                                title = { Text("Welcome") },
+                                title = { Text("Mario & Luigi") },
                                 actions = {
-                                    IconButton(
+                                    Card(
+                                        modifier = Modifier.padding(4.dp),
+                                        shape = RoundedCornerShape(10.dp),
                                         onClick = {
-
-                                        }) {
-                                        Icon(
-                                            imageVector = Icons.Filled.ShoppingCart,
-                                            contentDescription = "shopping cart"
-                                        )
-                                    }
-                                    Card() {
-                                        Text("R$ 0.00")
+                                            if (!isCartOpen.value) {
+                                                navController.navigate(Screen.CartScreen.route)
+                                                isCartOpen.value = !isCartOpen.value
+                                            } else {
+                                                navController.popBackStack()
+                                                isCartOpen.value = !isCartOpen.value
+                                            }
+                                        }
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.ShoppingCart,
+                                                tint = Black,
+                                                contentDescription = "shopping cart"
+                                            )
+                                            Text(
+                                                "R$ ${getTotal}0",
+                                                modifier = Modifier.padding(end = 4.dp)
+                                            )
+                                        }
                                     }
                                 }
                             )
+                        },
+                        bottomBar = {
+                            AnimatedVisibility(
+                                visibleState = MutableTransitionState(bottomBarVisibility.value),
+                                enter = slideInVertically(
+                                    initialOffsetY = { -60 },
+                                    animationSpec = tween(500, easing = LinearEasing)
+                                ),
+                                exit = slideOutVertically(
+                                    targetOffsetY = { -60 },
+                                    animationSpec = tween(500, easing = LinearEasing)
+                                )
+                            ) {
+                                Button(
+                                    onClick = {
+                                        navController.navigate(Screen.CartScreen.route)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(60.dp)
+                                ) {
+                                    Text(
+                                        text = "Finalizar Pedido",
+                                        modifier = Modifier.align(Alignment.CenterVertically),
+                                        fontSize = 18.sp
+                                    )
+                                }
+                            }
                         }
                     ) {
-
-                        Column(
-                            modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceAround
-                            ) {
-                                Card(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable {
-                                            categorySelected.value = Categories.PIZZAS
-                                            coroutineScope.launch {
-                                                scrollState.animateScrollToItem(0)
-                                            }
-                                        },
-                                    elevation = animateDpAsState(
-                                        targetValue = if (categorySelected.value == Categories.PIZZAS) 8.dp else 2.dp
-                                    ).value
-                                ) {
-                                    CategoryCard(
-                                        icon = Icons.Filled.LocalPizza,
-                                        category = Categories.PIZZAS,
-                                        contextDescription = Categories.PIZZAS
-                                    )
-                                }
-                                Card(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable {
-                                            categorySelected.value = Categories.DESSERT
-                                            coroutineScope.launch {
-                                                scrollState.animateScrollToItem(stickyHeaderIndex1)
-                                            }
-                                        },
-                                    elevation = animateDpAsState(
-                                        targetValue = if (categorySelected.value == Categories.DESSERT) 8.dp else 2.dp
-                                    ).value
-                                ) {
-                                    CategoryCard(
-                                        icon = Icons.Filled.Cake,
-                                        category = Categories.DESSERT,
-                                        contextDescription = Categories.DESSERT
-                                    )
-                                }
-                                Card(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable {
-                                            categorySelected.value = Categories.DRINKS
-                                            coroutineScope.launch {
-                                                scrollState.animateScrollToItem(stickyHeaderIndex2)
-                                            }
-                                        },
-                                    elevation = animateDpAsState(
-                                        targetValue = if (categorySelected.value == Categories.DRINKS) 8.dp else 2.dp
-                                    ).value
-                                ) {
-                                    CategoryCard(
-                                        icon = Icons.Filled.LocalDrink,
-                                        category = Categories.DRINKS,
-                                        contextDescription = Categories.DRINKS
-                                    )
-                                }
-
-                            }
-                            Divider(
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp)
-                            )
-
-
-
-                            LazyColumn(
-                                state = scrollState
-                            ) {
-
-                                item(
-                                    content = {
-                                        Text(
-                                            text = "Pizzaria Mario Luigi",
-                                            modifier = Modifier.padding(8.dp)
-                                        )
-                                        ImageCarousel(Images.image1, Images.image2, Images.image3)
-
-                                    }
+                        AnimatedNavHost(
+                            navController = navController,
+                            startDestination = Screen.HomeScreen.route,
+                            builder = {
+                                addHomeScreen(
+                                    bottomBarVisibility = bottomBarVisibility,
+                                    getTotal = getTotal,
+                                    categorySelected = categorySelected,
+                                    coroutineScope = coroutineScope,
+                                    scrollState = scrollState,
+                                    stickyHeaderIndex1 = stickyHeaderIndex1,
+                                    stickyHeaderIndex2 = stickyHeaderIndex2,
+                                    products = products,
+                                    viewModel = viewModel,
+                                    loading = loading
                                 )
-
-
-                                if (products.isNotEmpty()) {
-
-                                    val grouped = products
-                                        .groupBy { it.categoryOrder }
-
-
-                                    grouped.forEach { (initial, list) ->
-                                        stickyHeader {
-                                            Text(
-                                                text = if (initial == 1) Categories.PIZZAS
-                                                else if (initial == 2) Categories.DESSERT
-                                                else Categories.DRINKS,
-                                                modifier = Modifier
-                                                    .background(
-                                                        brush = Brush.horizontalGradient(
-                                                            colors = listOf(
-                                                                StickHeaderColor,
-                                                                Color.Transparent
-                                                            )
-                                                        )
-                                                    )
-                                                    .padding(8.dp)
-                                                    .fillMaxWidth(),
-                                                fontSize = 20.sp,
-                                                fontStyle = FontStyle.Italic
-                                            )
-
-
-                                            Divider(
-                                                thickness = 1.dp,
-                                                modifier = Modifier.padding(
-                                                    start = 8.dp,
-                                                    end = 250.dp
-                                                )
-                                            )
-
-                                        }
-
-                                        items(items = list.sortedBy { it.price }) { product ->
-                                            ProductLazyColumnItem(product = product)
-                                        }
-
-
-                                    }
-                                }
-                            }
-
-                            LaunchedEffect(scrollState) {
-                                snapshotFlow { scrollState.firstVisibleItemIndex }
-//
-                                    .distinctUntilChanged()
-//
-                                    .collect {
-                                        when {
-                                            it == 0 -> categorySelected.value = Categories.PIZZAS
-                                            it == stickyHeaderIndex1 + 1 -> categorySelected.value =
-                                                Categories.DESSERT
-                                            it == stickyHeaderIndex2 + 2 -> categorySelected.value =
-                                                Categories.DRINKS
-                                        }
-                                    }
-                            }
-                            CircularIndicator(loading = loading)
-                        }
+                                addCartScreen(
+                                    navController = navController,
+                                    cart = cart,
+                                    bottomBarVisibility = bottomBarVisibility,
+                                    total = getTotal,
+                                    isCartOpen = isCartOpen
+                                )
+                                addPaymentScreen()
+                            })
                     }
                 }
             }
         }
     }
-
-
 }
 
+@ExperimentalAnimationApi
+fun NavGraphBuilder.addPaymentScreen() {
+    composable(
+        route = Screen.CheckOutScreen.route,
+        enterTransition = { _, _ ->
+            slideInHorizontally(
+                initialOffsetX = { -200 },
+                animationSpec = tween(300, easing = FastOutLinearInEasing)
+            )
+
+        }
+    ) {
+        CheckOutScreen()
+    }
+}
+
+@ExperimentalAnimationApi
+fun NavGraphBuilder.addCartScreen(
+    bottomBarVisibility: MutableState<Boolean>,
+    cart: List<CartDetail>,
+    navController: NavController,
+    total: Double,
+    isCartOpen: MutableState<Boolean>
+) {
+    composable(
+        route = Screen.CartScreen.route,
+        enterTransition = { _, _ ->
+            slideInVertically(
+                initialOffsetY = { -3000 },
+                animationSpec = tween(300, easing = LinearEasing)
+            )
+        },
+        exitTransition = { _, _ ->
+            shrinkOut(
+
+                animationSpec = tween(300, easing = LinearOutSlowInEasing)
+            )
+        },
+        popExitTransition = { _, _ ->
+            slideOutVertically(
+                targetOffsetY = { -3000 },
+                animationSpec = tween(300, easing = LinearEasing)
+            )
+        },
+
+        ) {
+        CartScreen(
+            navController = navController,
+            bottomBarVisibility = bottomBarVisibility,
+            cart = cart,
+            total = total,
+            isCartOpen = isCartOpen
+        )
+    }
+}
+
+@ExperimentalAnimationApi
+fun NavGraphBuilder.addHomeScreen(
+    bottomBarVisibility: MutableState<Boolean>,
+    getTotal: Double,
+    categorySelected: MutableState<String>,
+    coroutineScope: CoroutineScope,
+    scrollState: LazyListState,
+    stickyHeaderIndex1: Int,
+    stickyHeaderIndex2: Int,
+    products: List<Product>,
+    viewModel: OrdersViewModel,
+    loading: Boolean
+) {
+    composable(
+        route = Screen.HomeScreen.route,
+        exitTransition = { _, _ ->
+            fadeOut(animationSpec = tween(500))
+        },
+        popEnterTransition = { _, _ ->
+            fadeIn(animationSpec = tween(500))
+        }
+    ) {
+        HomeScreen(
+            bottomBarVisibility = bottomBarVisibility,
+            getTotal = getTotal,
+            categorySelected = categorySelected,
+            coroutineScope = coroutineScope,
+            scrollState = scrollState,
+            stickyHeaderIndex1 = stickyHeaderIndex1,
+            stickyHeaderIndex2 = stickyHeaderIndex2,
+            products = products,
+            viewModel = viewModel,
+            loading = loading
+        )
+    }
+}
+
+
+@ExperimentalAnimationApi
+@Composable
+public fun rememberAnimatedNavController(): NavHostController {
+    val navController = rememberNavController()
+    val animatedNavigator = remember(navController) { AnimatedComposeNavigator() }
+    return navController.apply {
+        navigatorProvider += animatedNavigator
+    }
+}
 
 object Images {
     const val image1 = R.drawable.pizza

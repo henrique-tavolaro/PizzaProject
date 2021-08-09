@@ -16,10 +16,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pizzaproject.R
+import com.example.pizzaproject.domain.models.OrderInProgress
 import com.example.pizzaproject.domain.models.Product
 
 @Composable
-fun ProductLazyColumnItem(product: Product) {
+fun ProductLazyColumnItem(
+    product: Product,
+    viewModel: OrdersViewModel) {
        Row(
         modifier = Modifier
             .padding(horizontal = 8.dp)
@@ -40,7 +43,12 @@ fun ProductLazyColumnItem(product: Product) {
             )
             IconButton(
                 onClick = {
-
+                    val orderInProgress = OrderInProgress(
+                        product = product.name,
+                        price = product.price
+                    )
+                    viewModel.addProductToOrder(orderInProgress)
+                    viewModel.getTotalSum()
                 },
             ) {
                 Icon(
@@ -55,8 +63,3 @@ fun ProductLazyColumnItem(product: Product) {
 
 val product1 = Product("id1", "Mussarela", 50.0, "pizza")
 
-@Preview
-@Composable
-fun PreviewProductsColumnItem() {
-    ProductLazyColumnItem(product = product1)
-}

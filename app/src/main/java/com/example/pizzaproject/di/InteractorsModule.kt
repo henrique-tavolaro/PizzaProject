@@ -1,7 +1,11 @@
 package com.example.pizzaproject.di
 
 import com.example.pizzaproject.datasource.firestore.FirestoreDatasource
+import com.example.pizzaproject.datasource.room.OrderDao
+import com.example.pizzaproject.domain.interactors.AddProductToOrder
+import com.example.pizzaproject.domain.interactors.GetCart
 import com.example.pizzaproject.domain.interactors.GetProducts
+import com.example.pizzaproject.domain.interactors.GetOrderTotal
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,5 +26,39 @@ object InteractorsModule {
             firestore = firestore
         )
     }
+
+    @ViewModelScoped
+    @Provides
+    fun provideAddProductToOrder(
+        dao: OrderDao
+    ) : AddProductToOrder{
+        return AddProductToOrder(
+            dao = dao
+        )
+    }
+
+    @ViewModelScoped
+    @Provides
+    fun provideGetTotalSum(
+        dao: OrderDao
+    ) : GetOrderTotal{
+        return GetOrderTotal(
+            dao = dao
+        )
+    }
+
+    @ViewModelScoped
+    @Provides
+    fun provideGetCart(
+        dao: OrderDao
+    ) : GetCart{
+        return GetCart(
+            dao = dao
+        )
+    }
+
+
+
+
 
 }

@@ -1,0 +1,30 @@
+package com.example.pizzaproject.datasource.room
+
+import androidx.room.*
+import com.example.pizzaproject.domain.models.CartDetail
+import com.example.pizzaproject.domain.models.OrderInProgress
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface OrderDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addProductToOrder(orderInProgress: OrderInProgress)
+
+    @Transaction
+    @Query("SELECT SUM(price) FROM order_in_progress")
+    fun getOrderTotal(): Flow<Double?>
+
+    //    @Delete
+//    suspend fun deleteProductFromOrder(id: Int)
+//
+//    @Delete
+//    suspend fun clearCart()
+//
+    @Query(
+        "SELECT product, SUM(price) as sum_price, COUNT(product) as product_count " +
+                "FROM order_in_progress GROUP BY product"
+    )
+    fun getCart(): Flow<List<CartDetail>?>
+}
+
