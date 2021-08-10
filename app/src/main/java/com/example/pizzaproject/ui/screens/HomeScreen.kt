@@ -55,9 +55,11 @@ fun HomeScreen(
     stickyHeaderIndex2: Int,
     products: List<Product>,
     viewModel: OrdersViewModel,
-    loading: Boolean
+    loading: Boolean,
+    fabVisibility: MutableState<Boolean>
 ) {
     bottomBarVisibility.value = getTotal != 0.0
+    fabVisibility.value = false
 
     Column(
         modifier =

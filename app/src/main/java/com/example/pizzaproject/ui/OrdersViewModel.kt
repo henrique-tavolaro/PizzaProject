@@ -5,9 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzaproject.Categories
-import com.example.pizzaproject.domain.interactors.AddProductToOrder
-import com.example.pizzaproject.domain.interactors.GetProducts
-import com.example.pizzaproject.domain.interactors.GetOrderTotal
+import com.example.pizzaproject.domain.interactors.*
 import com.example.pizzaproject.domain.models.OrderInProgress
 import com.example.pizzaproject.domain.models.Product
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +14,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.example.pizzaproject.domain.interactors.GetCart
 import com.example.pizzaproject.domain.models.CartDetail
 
 @HiltViewModel
@@ -24,7 +21,9 @@ class OrdersViewModel @Inject constructor(
     private val getProducts: GetProducts,
     private val addProductToOrder: AddProductToOrder,
     private val getOrderTotal: GetOrderTotal,
-    private val getCart: GetCart
+    private val getCart: GetCart,
+    private val clearCart: ClearCart,
+    private val deleteProductFromOrder: DeleteProductFromOrder
 ) : ViewModel() {
 
     val loading = mutableStateOf(false)
@@ -40,6 +39,8 @@ class OrdersViewModel @Inject constructor(
     val bottomBarVisibility = mutableStateOf(false)
 
     val isCartOpen = mutableStateOf(false)
+
+    val floatingActionButtonVisibility = mutableStateOf(false)
 
     init {
         getProductList()
@@ -90,6 +91,8 @@ class OrdersViewModel @Inject constructor(
             getOrderTotal.execute().collect {
                 if (it != null) {
                     totalSum.value = it
+                } else {
+                 totalSum.value = 0.0
                 }
             }
         }
@@ -105,5 +108,29 @@ class OrdersViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun clearCart() {
+        viewModelScope.launch {
+            clearCart.execute()
+        }
+    }
+
+    fun deleteProductFromOrder(product: String){
+        viewModelScope.launch {
+            deleteProductFromOrder.execute(product)
+        }
+    }
+
+    val addressTextField = mutableStateOf("")
+
+    fun onAddressChange(text: String){
+        addressTextField.value = text
+    }
+
+    val observationTextField = mutableStateOf("")
+
+    fun onObservationChange(text: String){
+        observationTextField.value = text
     }
 }

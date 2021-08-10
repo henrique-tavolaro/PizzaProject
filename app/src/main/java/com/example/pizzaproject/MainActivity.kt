@@ -1,10 +1,11 @@
 package com.example.pizzaproject
 
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
-import android.view.View
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -20,11 +21,9 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.interpolator.view.animation.FastOutLinearInInterpolator
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -43,8 +42,6 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.collect
-
 
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
@@ -53,6 +50,7 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: OrdersViewModel by viewModels()
 
+    @SuppressLint("UnusedCrossfadeTargetStateParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -68,6 +66,10 @@ class MainActivity : AppCompatActivity() {
             val bottomBarVisibility = viewModel.bottomBarVisibility
             val isCartOpen = viewModel.isCartOpen
             val cart = viewModel.cart.value
+            val radioOptions = listOf("Cartão", "Dinheiro")
+            val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
+            val fabVisibility = viewModel.floatingActionButtonVisibility
+            val address = viewModel.addressTextField.value
 
             PizzaProjectTheme {
                 // A surface container using the 'background' color from the theme
@@ -139,6 +141,26 @@ class MainActivity : AppCompatActivity() {
                                     )
                                 }
                             }
+                        },
+                        floatingActionButton = {
+                            Crossfade(targetState = fabVisibility.value) {
+                                if(it){
+                                    ExtendedFloatingActionButton(
+                                        modifier = Modifier
+                                            .padding(bottom = 16.dp, end = 16.dp),
+                                        text = { Text("Enviar pedido") },
+                                        onClick = {
+                                            if(address.isNotEmpty()){
+
+                                            } else {
+                                                Toast.makeText(
+                                                    applicationContext,
+                                                    "Insira o enderço para enviar o pedido",
+                                                    Toast.LENGTH_LONG).show()
+                                            }
+                                        })
+                                }
+                            }
                         }
                     ) {
                         AnimatedNavHost(
@@ -155,16 +177,27 @@ class MainActivity : AppCompatActivity() {
                                     stickyHeaderIndex2 = stickyHeaderIndex2,
                                     products = products,
                                     viewModel = viewModel,
-                                    loading = loading
+                                    loading = loading,
+                                    fabVisibility = fabVisibility,
                                 )
                                 addCartScreen(
                                     navController = navController,
                                     cart = cart,
                                     bottomBarVisibility = bottomBarVisibility,
                                     total = getTotal,
-                                    isCartOpen = isCartOpen
+                                    isCartOpen = isCartOpen,
+                                    viewModel = viewModel,
+                                    fabVisibility = fabVisibility,
                                 )
-                                addPaymentScreen()
+                                addPaymentScreen(
+                                    radioOptions = radioOptions,
+                                    selectedOption = selectedOption,
+                                    onOptionSelected = onOptionSelected,
+                                    viewModel = viewModel,
+                                    total = getTotal,
+                                    address = address,
+                                    fabVisibility = fabVisibility,
+                                )
                             })
                     }
                 }
@@ -174,18 +207,34 @@ class MainActivity : AppCompatActivity() {
 }
 
 @ExperimentalAnimationApi
-fun NavGraphBuilder.addPaymentScreen() {
+fun NavGraphBuilder.addPaymentScreen(
+    radioOptions: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
+    viewModel: OrdersViewModel,
+    total: Double,
+    address: String,
+    fabVisibility: MutableState<Boolean>
+) {
     composable(
         route = Screen.CheckOutScreen.route,
         enterTransition = { _, _ ->
             slideInHorizontally(
-                initialOffsetX = { -200 },
+                initialOffsetX = { -600 },
                 animationSpec = tween(300, easing = FastOutLinearInEasing)
             )
 
         }
     ) {
-        CheckOutScreen()
+        CheckOutScreen(
+            radioOptions = radioOptions,
+            selectedOption = selectedOption,
+            onOptionSelected = onOptionSelected,
+            viewModel = viewModel,
+            total = total,
+            address = address,
+            fabVisibility = fabVisibility
+        )
     }
 }
 
@@ -195,7 +244,9 @@ fun NavGraphBuilder.addCartScreen(
     cart: List<CartDetail>,
     navController: NavController,
     total: Double,
-    isCartOpen: MutableState<Boolean>
+    isCartOpen: MutableState<Boolean>,
+    viewModel: OrdersViewModel,
+    fabVisibility: MutableState<Boolean>
 ) {
     composable(
         route = Screen.CartScreen.route,
@@ -224,7 +275,9 @@ fun NavGraphBuilder.addCartScreen(
             bottomBarVisibility = bottomBarVisibility,
             cart = cart,
             total = total,
-            isCartOpen = isCartOpen
+            isCartOpen = isCartOpen,
+            viewModel = viewModel,
+            fabVisibility = fabVisibility
         )
     }
 }
@@ -240,7 +293,8 @@ fun NavGraphBuilder.addHomeScreen(
     stickyHeaderIndex2: Int,
     products: List<Product>,
     viewModel: OrdersViewModel,
-    loading: Boolean
+    loading: Boolean,
+    fabVisibility: MutableState<Boolean>
 ) {
     composable(
         route = Screen.HomeScreen.route,
@@ -261,7 +315,8 @@ fun NavGraphBuilder.addHomeScreen(
             stickyHeaderIndex2 = stickyHeaderIndex2,
             products = products,
             viewModel = viewModel,
-            loading = loading
+            loading = loading,
+            fabVisibility = fabVisibility
         )
     }
 }

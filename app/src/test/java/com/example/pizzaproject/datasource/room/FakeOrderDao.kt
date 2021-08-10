@@ -35,6 +35,19 @@ class FakeOrderDao(
 
     }
 
+    override suspend fun deleteProductFromOrder(product: String) {
+        if (orderInProgressList.isNotEmpty()) {
+            for (i in orderInProgressList) {
+                if (i.product == product)
+                    orderInProgressList.remove(i)
+            }
+        }
+    }
+
+    override suspend fun clearCart() {
+        orderInProgressList.clear()
+    }
+
     override fun getCart(): Flow<List<CartDetail>?> = flow {
 
             if(orderInProgressList.isNotEmpty()){

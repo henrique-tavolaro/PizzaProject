@@ -6,6 +6,7 @@ import com.example.pizzaproject.datasource.room.productInOrder1
 import com.example.pizzaproject.datasource.room.productInOrder2
 import com.example.pizzaproject.domain.models.CartDetail
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
@@ -35,13 +36,13 @@ class GetCartTest {
             CartDetail(product = "Portuguesa", productCount = 1, sumPrice = 60.0),
         )
 
-        var getCart = listOf<CartDetail>()
+        var newCart = listOf<CartDetail>()
 
-        dao.getCart().collect {
-            getCart = it!!
-        }
+            getCart.execute().collect {
+                newCart = it!!
+            }
 
-        assert(getCart == cart)
+        assert(newCart == cart)
     }
 
 }

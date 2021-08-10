@@ -2,10 +2,7 @@ package com.example.pizzaproject.di
 
 import com.example.pizzaproject.datasource.firestore.FirestoreDatasource
 import com.example.pizzaproject.datasource.room.OrderDao
-import com.example.pizzaproject.domain.interactors.AddProductToOrder
-import com.example.pizzaproject.domain.interactors.GetCart
-import com.example.pizzaproject.domain.interactors.GetProducts
-import com.example.pizzaproject.domain.interactors.GetOrderTotal
+import com.example.pizzaproject.domain.interactors.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,6 +50,26 @@ object InteractorsModule {
         dao: OrderDao
     ) : GetCart{
         return GetCart(
+            dao = dao
+        )
+    }
+
+    @ViewModelScoped
+    @Provides
+    fun provideClearCart(
+        dao: OrderDao
+    ) : ClearCart{
+        return ClearCart(
+            dao = dao
+        )
+    }
+
+   @ViewModelScoped
+    @Provides
+    fun provideDeleteProductFromOrder(
+        dao: OrderDao
+    ) : DeleteProductFromOrder{
+        return DeleteProductFromOrder(
             dao = dao
         )
     }

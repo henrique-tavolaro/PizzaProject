@@ -15,12 +15,15 @@ interface OrderDao {
     @Query("SELECT SUM(price) FROM order_in_progress")
     fun getOrderTotal(): Flow<Double?>
 
-    //    @Delete
-//    suspend fun deleteProductFromOrder(id: Int)
-//
-//    @Delete
-//    suspend fun clearCart()
-//
+    @Transaction
+    @Query("DELETE FROM order_in_progress WHERE product = :product")
+    suspend fun deleteProductFromOrder(product: String)
+
+    @Transaction
+    @Query("DELETE FROM order_in_progress")
+    suspend fun clearCart()
+
+    @Transaction
     @Query(
         "SELECT product, SUM(price) as sum_price, COUNT(product) as product_count " +
                 "FROM order_in_progress GROUP BY product"

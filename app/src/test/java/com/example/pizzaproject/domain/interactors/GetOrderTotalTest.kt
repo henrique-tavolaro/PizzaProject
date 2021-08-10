@@ -39,7 +39,7 @@ internal class GetOrderTotalTest {
         dao.addProductToOrder(productInOrder2)
 
         //assert the total is sum of price productInOrder1(55.0) and productInOrder2(60.0)
-        dao.getOrderTotal().collect {
+        getOrderTotal.execute().collect {
             if(it != null){
                 total = it
             }

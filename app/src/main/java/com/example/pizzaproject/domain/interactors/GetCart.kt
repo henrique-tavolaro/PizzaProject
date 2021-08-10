@@ -8,7 +8,7 @@ class GetCart(
     private val dao: OrderDao
 ) {
 
-    suspend fun execute() : Flow<List<CartDetail>?> {
+    fun execute() : Flow<List<CartDetail>?> {
         return dao.getCart()
     }
 
