@@ -24,6 +24,17 @@ object InteractorsModule {
         )
     }
 
+
+    @ViewModelScoped
+    @Provides
+    fun provideAddClient(
+        firestore: FirestoreDatasource
+    ): AddClient {
+        return AddClient(
+            firestore = firestore
+        )
+    }
+
     @ViewModelScoped
     @Provides
     fun provideAddProductToOrder(
@@ -73,6 +84,7 @@ object InteractorsModule {
             dao = dao
         )
     }
+
 
 
 

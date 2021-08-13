@@ -2,9 +2,9 @@ package com.example.pizzaproject
 
 
 import android.annotation.SuppressLint
-import android.app.Application
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -30,16 +30,20 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.plusAssign
 import com.example.pizzaproject.domain.models.CartDetail
+import com.example.pizzaproject.domain.models.Client
 import com.example.pizzaproject.domain.models.Product
 import com.example.pizzaproject.ui.OrdersViewModel
 import com.example.pizzaproject.ui.navigation.Screen
 import com.example.pizzaproject.ui.screens.CartScreen
 import com.example.pizzaproject.ui.screens.CheckOutScreen
 import com.example.pizzaproject.ui.screens.HomeScreen
+import com.example.pizzaproject.ui.screens.SplashSignInScreen
 import com.example.pizzaproject.ui.theme.PizzaProjectTheme
 import com.google.accompanist.navigation.animation.AnimatedComposeNavigator
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 
@@ -54,6 +58,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build()
+
+            val mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
             val navController = rememberAnimatedNavController()
             val categorySelected = viewModel.categorySelected
             val scrollState = rememberLazyListState()
@@ -66,10 +77,19 @@ class MainActivity : AppCompatActivity() {
             val bottomBarVisibility = viewModel.bottomBarVisibility
             val isCartOpen = viewModel.isCartOpen
             val cart = viewModel.cart.value
-            val radioOptions = listOf("Cartão", "Dinheiro")
+            val radioOptions = viewModel.radioOptions
             val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
             val fabVisibility = viewModel.floatingActionButtonVisibility
             val address = viewModel.addressTextField.value
+            val googleButtonVisibility = viewModel.googleButtonVisibility
+            val loggedUser = viewModel.loggedUser
+
+
+
+
+            if(loggedUser.value != null){
+                navController.navigate(Screen.HomeScreen.route)
+            }
 
             PizzaProjectTheme {
                 // A surface container using the 'background' color from the theme
@@ -77,11 +97,13 @@ class MainActivity : AppCompatActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Log.d("TAG2", cart.toString())
+
                     Scaffold(
                         topBar = {
                             TopAppBar(
-                                title = { Text("Mario & Luigi") },
+                                title = {
+                                    Text("Mario & Luigi")
+                                        },
                                 actions = {
                                     Card(
                                         modifier = Modifier.padding(4.dp),
@@ -144,19 +166,20 @@ class MainActivity : AppCompatActivity() {
                         },
                         floatingActionButton = {
                             Crossfade(targetState = fabVisibility.value) {
-                                if(it){
+                                if (it) {
                                     ExtendedFloatingActionButton(
                                         modifier = Modifier
                                             .padding(bottom = 16.dp, end = 16.dp),
                                         text = { Text("Enviar pedido") },
                                         onClick = {
-                                            if(address.isNotEmpty()){
+                                            if (address.isNotEmpty()) {
 
                                             } else {
                                                 Toast.makeText(
                                                     applicationContext,
-                                                    "Insira o enderço para enviar o pedido",
-                                                    Toast.LENGTH_LONG).show()
+                                                    "Insira o endereço para enviar o pedido",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
                                             }
                                         })
                                 }
@@ -165,8 +188,19 @@ class MainActivity : AppCompatActivity() {
                     ) {
                         AnimatedNavHost(
                             navController = navController,
-                            startDestination = Screen.HomeScreen.route,
+                            startDestination = Screen.SplashSignInScreen.route,
                             builder = {
+                                addSplashSignInScreen(
+                                    googleButtonVisibility = googleButtonVisibility,
+                                    onClick = {
+                                                    val signInIntent: Intent =
+                                                        mGoogleSignInClient.signInIntent
+                                        startActivityForResult(signInIntent, RC_SIGN_IN)
+                                    },
+                                    context = this@MainActivity,
+                                    loggedUser = loggedUser,
+                                    navController = navController
+                                )
                                 addHomeScreen(
                                     bottomBarVisibility = bottomBarVisibility,
                                     getTotal = getTotal,
@@ -179,6 +213,7 @@ class MainActivity : AppCompatActivity() {
                                     viewModel = viewModel,
                                     loading = loading,
                                     fabVisibility = fabVisibility,
+                                    loggedUser = loggedUser
                                 )
                                 addCartScreen(
                                     navController = navController,
@@ -204,7 +239,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if(requestCode == RC_SIGN_IN){
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            viewModel.handleSignInResult(task, this)
+        }
+    }
 }
+
+
+const val RC_SIGN_IN = 123
 
 @ExperimentalAnimationApi
 fun NavGraphBuilder.addPaymentScreen(
@@ -282,6 +329,34 @@ fun NavGraphBuilder.addCartScreen(
     }
 }
 
+@ExperimentalMaterialApi
+@ExperimentalAnimationApi
+fun NavGraphBuilder.addSplashSignInScreen(
+    googleButtonVisibility: MutableState<Boolean>,
+    onClick: () -> Unit,
+    context: Context,
+    loggedUser: MutableState<Client?>,
+    navController: NavController
+){
+    composable(
+        route = Screen.SplashSignInScreen.route,
+        exitTransition = { _, _ ->
+            fadeOut(animationSpec = tween(300))
+        },
+        popEnterTransition = { _, _ ->
+            fadeIn(animationSpec = tween(500))
+        },
+    ){
+        SplashSignInScreen(
+            onClick = onClick,
+            googleButtonVisibility = googleButtonVisibility,
+            context = context,
+            loggedUser = loggedUser,
+            navController = navController
+        )
+    }
+}
+
 @ExperimentalAnimationApi
 fun NavGraphBuilder.addHomeScreen(
     bottomBarVisibility: MutableState<Boolean>,
@@ -294,10 +369,17 @@ fun NavGraphBuilder.addHomeScreen(
     products: List<Product>,
     viewModel: OrdersViewModel,
     loading: Boolean,
-    fabVisibility: MutableState<Boolean>
+    fabVisibility: MutableState<Boolean>,
+    loggedUser: MutableState<Client?>
 ) {
     composable(
         route = Screen.HomeScreen.route,
+        enterTransition = { _, _->
+            slideInHorizontally(
+                initialOffsetX = { -600 },
+                animationSpec = tween(300, easing = FastOutLinearInEasing)
+            )
+        },
         exitTransition = { _, _ ->
             fadeOut(animationSpec = tween(500))
         },
@@ -316,7 +398,8 @@ fun NavGraphBuilder.addHomeScreen(
             products = products,
             viewModel = viewModel,
             loading = loading,
-            fabVisibility = fabVisibility
+            fabVisibility = fabVisibility,
+            loggedUser = loggedUser
         )
     }
 }

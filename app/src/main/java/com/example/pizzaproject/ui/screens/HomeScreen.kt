@@ -1,6 +1,7 @@
 package com.example.pizzaproject.ui.screens
 
 import CircularIndicator
+import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.pizzaproject.Categories
 import com.example.pizzaproject.Images
+import com.example.pizzaproject.domain.models.Client
 import com.example.pizzaproject.domain.models.Product
 import com.example.pizzaproject.ui.OrdersViewModel
 import com.example.pizzaproject.ui.ProductLazyColumnItem
@@ -56,11 +58,12 @@ fun HomeScreen(
     products: List<Product>,
     viewModel: OrdersViewModel,
     loading: Boolean,
-    fabVisibility: MutableState<Boolean>
+    fabVisibility: MutableState<Boolean>,
+    loggedUser: MutableState<Client?>
 ) {
     bottomBarVisibility.value = getTotal != 0.0
     fabVisibility.value = false
-
+    Log.d("TAG1", loggedUser.value.toString())
     Column(
         modifier =
         Modifier
@@ -143,7 +146,7 @@ fun HomeScreen(
             item(
                 content = {
                     Text(
-                        text = "Pizzaria Mario Luigi",
+                        text = loggedUser.value!!.name,
                         modifier = Modifier.padding(8.dp)
                     )
                     ImageCarousel(Images.image1, Images.image2, Images.image3)

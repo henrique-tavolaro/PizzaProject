@@ -1,20 +1,33 @@
 package com.example.pizzaproject.ui
 
+import android.app.Activity
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzaproject.Categories
+import com.example.pizzaproject.RC_SIGN_IN
 import com.example.pizzaproject.domain.interactors.*
+import com.example.pizzaproject.domain.models.CartDetail
+import com.example.pizzaproject.domain.models.Client
 import com.example.pizzaproject.domain.models.OrderInProgress
 import com.example.pizzaproject.domain.models.Product
+import com.example.pizzaproject.ui.navigation.Screen
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.example.pizzaproject.domain.models.CartDetail
+
 
 @HiltViewModel
 class OrdersViewModel @Inject constructor(
@@ -23,7 +36,8 @@ class OrdersViewModel @Inject constructor(
     private val getOrderTotal: GetOrderTotal,
     private val getCart: GetCart,
     private val clearCart: ClearCart,
-    private val deleteProductFromOrder: DeleteProductFromOrder
+    private val deleteProductFromOrder: DeleteProductFromOrder,
+    private val addClient: AddClient
 ) : ViewModel() {
 
     val loading = mutableStateOf(false)
@@ -41,6 +55,12 @@ class OrdersViewModel @Inject constructor(
     val isCartOpen = mutableStateOf(false)
 
     val floatingActionButtonVisibility = mutableStateOf(false)
+
+    val googleButtonVisibility = mutableStateOf(false)
+
+    val loggedUser: MutableState<Client?> = mutableStateOf(null)
+
+    val radioOptions = listOf("Cartão", "Dinheiro")
 
     init {
         getProductList()
@@ -65,7 +85,6 @@ class OrdersViewModel @Inject constructor(
                 }
             }.launchIn(viewModelScope)
         }
-
     }
 
     private fun getStickyHeadersIndex(list: List<Product>) {
@@ -132,5 +151,30 @@ class OrdersViewModel @Inject constructor(
 
     fun onObservationChange(text: String){
         observationTextField.value = text
+    }
+
+    fun addClient(client: Client){
+        viewModelScope.launch {
+            addClient.execute(client)
+        }
+    }
+
+    fun handleSignInResult(task: Task<GoogleSignInAccount>, context: Context){
+        try {
+            val account: GoogleSignInAccount = task.getResult(ApiException::class.java)!!
+
+            val client = Client(
+                account.id!!,
+                account.displayName!!,
+                account.photoUrl!!.toString(),
+                account.email!!
+            )
+
+                loggedUser.value = client
+
+            Log.d("TAG", client.toString())
+        } catch (e: ApiException) {
+            Toast.makeText(context, "Falha ao fazer login", Toast.LENGTH_LONG).show()
+        }
     }
 }
