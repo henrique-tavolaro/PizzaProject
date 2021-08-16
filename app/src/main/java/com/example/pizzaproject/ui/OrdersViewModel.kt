@@ -1,6 +1,5 @@
 package com.example.pizzaproject.ui
 
-import android.app.Activity
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
@@ -9,16 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pizzaproject.Categories
-import com.example.pizzaproject.RC_SIGN_IN
 import com.example.pizzaproject.domain.interactors.*
-import com.example.pizzaproject.domain.models.CartDetail
-import com.example.pizzaproject.domain.models.Client
-import com.example.pizzaproject.domain.models.OrderInProgress
-import com.example.pizzaproject.domain.models.Product
-import com.example.pizzaproject.ui.navigation.Screen
-import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.example.pizzaproject.domain.models.*
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,7 +29,8 @@ class OrdersViewModel @Inject constructor(
     private val getCart: GetCart,
     private val clearCart: ClearCart,
     private val deleteProductFromOrder: DeleteProductFromOrder,
-    private val addClient: AddClient
+    private val addClient: AddClient,
+    private val sendOrder: SendOrder
 ) : ViewModel() {
 
     val loading = mutableStateOf(false)
@@ -61,6 +54,8 @@ class OrdersViewModel @Inject constructor(
     val loggedUser: MutableState<Client?> = mutableStateOf(null)
 
     val radioOptions = listOf("Cartão", "Dinheiro")
+
+    val topBarVisibility = mutableStateOf(false)
 
     init {
         getProductList()
@@ -111,7 +106,7 @@ class OrdersViewModel @Inject constructor(
                 if (it != null) {
                     totalSum.value = it
                 } else {
-                 totalSum.value = 0.0
+                    totalSum.value = 0.0
                 }
             }
         }
@@ -135,7 +130,7 @@ class OrdersViewModel @Inject constructor(
         }
     }
 
-    fun deleteProductFromOrder(product: String){
+    fun deleteProductFromOrder(product: String) {
         viewModelScope.launch {
             deleteProductFromOrder.execute(product)
         }
@@ -143,23 +138,23 @@ class OrdersViewModel @Inject constructor(
 
     val addressTextField = mutableStateOf("")
 
-    fun onAddressChange(text: String){
+    fun onAddressChange(text: String) {
         addressTextField.value = text
     }
 
     val observationTextField = mutableStateOf("")
 
-    fun onObservationChange(text: String){
+    fun onObservationChange(text: String) {
         observationTextField.value = text
     }
 
-    fun addClient(client: Client){
+    fun addClient(client: Client) {
         viewModelScope.launch {
             addClient.execute(client)
         }
     }
 
-    fun handleSignInResult(task: Task<GoogleSignInAccount>, context: Context){
+    fun handleSignInResult(task: Task<GoogleSignInAccount>, context: Context) {
         try {
             val account: GoogleSignInAccount = task.getResult(ApiException::class.java)!!
 
@@ -169,12 +164,19 @@ class OrdersViewModel @Inject constructor(
                 account.photoUrl!!.toString(),
                 account.email!!
             )
-
-                loggedUser.value = client
-
-            Log.d("TAG", client.toString())
+            loggedUser.value = client
+            addClient(client)
         } catch (e: ApiException) {
             Toast.makeText(context, "Falha ao fazer login", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun sendOrder(order: Order,
+                  onSuccess: () -> Unit,
+                  onFailure: () -> Unit){
+        viewModelScope.launch {
+            sendOrder.execute(order, onSuccess, onFailure)
+
         }
     }
 }

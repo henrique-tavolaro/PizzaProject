@@ -59,8 +59,11 @@ fun HomeScreen(
     viewModel: OrdersViewModel,
     loading: Boolean,
     fabVisibility: MutableState<Boolean>,
-    loggedUser: MutableState<Client?>
+    topBarVisibility: MutableState<Boolean>,
+    loggedUser: MutableState<Client?>,
+
 ) {
+    topBarVisibility.value = true
     bottomBarVisibility.value = getTotal != 0.0
     fabVisibility.value = false
     Log.d("TAG1", loggedUser.value.toString())

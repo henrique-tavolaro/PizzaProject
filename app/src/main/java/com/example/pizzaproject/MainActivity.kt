@@ -4,6 +4,7 @@ package com.example.pizzaproject
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.opengl.Visibility
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -31,6 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.plusAssign
 import com.example.pizzaproject.domain.models.CartDetail
 import com.example.pizzaproject.domain.models.Client
+import com.example.pizzaproject.domain.models.Order
 import com.example.pizzaproject.domain.models.Product
 import com.example.pizzaproject.ui.OrdersViewModel
 import com.example.pizzaproject.ui.navigation.Screen
@@ -46,6 +48,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
@@ -54,7 +59,7 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: OrdersViewModel by viewModels()
 
-    @SuppressLint("UnusedCrossfadeTargetStateParameter")
+    @SuppressLint("UnusedCrossfadeTargetStateParameter", "SimpleDateFormat")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -68,6 +73,7 @@ class MainActivity : AppCompatActivity() {
             val navController = rememberAnimatedNavController()
             val categorySelected = viewModel.categorySelected
             val scrollState = rememberLazyListState()
+            val scaffoldState = rememberScaffoldState()
             val coroutineScope = rememberCoroutineScope()
             val products = viewModel.productsList.value
             val stickyHeaderIndex1 = viewModel.stickyHeaderIndex1.value
@@ -83,13 +89,7 @@ class MainActivity : AppCompatActivity() {
             val address = viewModel.addressTextField.value
             val googleButtonVisibility = viewModel.googleButtonVisibility
             val loggedUser = viewModel.loggedUser
-
-
-
-
-            if(loggedUser.value != null){
-                navController.navigate(Screen.HomeScreen.route)
-            }
+            val topBarVisibility = viewModel.topBarVisibility
 
             PizzaProjectTheme {
                 // A surface container using the 'background' color from the theme
@@ -99,42 +99,46 @@ class MainActivity : AppCompatActivity() {
                 ) {
 
                     Scaffold(
+                        scaffoldState = scaffoldState,
                         topBar = {
-                            TopAppBar(
-                                title = {
-                                    Text("Mario & Luigi")
-                                        },
-                                actions = {
-                                    Card(
-                                        modifier = Modifier.padding(4.dp),
-                                        shape = RoundedCornerShape(10.dp),
-                                        onClick = {
-                                            if (!isCartOpen.value) {
-                                                navController.navigate(Screen.CartScreen.route)
-                                                isCartOpen.value = !isCartOpen.value
-                                            } else {
-                                                navController.popBackStack()
-                                                isCartOpen.value = !isCartOpen.value
+                            AnimatedVisibility(visible = topBarVisibility.value)
+                            {
+                                TopAppBar(
+                                    title = {
+                                        Text("Mario & Luigi")
+                                    },
+                                    actions = {
+                                        Card(
+                                            modifier = Modifier.padding(4.dp),
+                                            shape = RoundedCornerShape(10.dp),
+                                            onClick = {
+                                                if (!isCartOpen.value) {
+                                                    navController.navigate(Screen.CartScreen.route)
+                                                    isCartOpen.value = !isCartOpen.value
+                                                } else {
+                                                    navController.popBackStack()
+                                                    isCartOpen.value = !isCartOpen.value
+                                                }
+                                            }
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(4.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.ShoppingCart,
+                                                    tint = Black,
+                                                    contentDescription = "shopping cart"
+                                                )
+                                                Text(
+                                                    "R$ ${getTotal}0",
+                                                    modifier = Modifier.padding(end = 4.dp)
+                                                )
                                             }
                                         }
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(4.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Filled.ShoppingCart,
-                                                tint = Black,
-                                                contentDescription = "shopping cart"
-                                            )
-                                            Text(
-                                                "R$ ${getTotal}0",
-                                                modifier = Modifier.padding(end = 4.dp)
-                                            )
-                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         },
                         bottomBar = {
                             AnimatedVisibility(
@@ -173,7 +177,36 @@ class MainActivity : AppCompatActivity() {
                                         text = { Text("Enviar pedido") },
                                         onClick = {
                                             if (address.isNotEmpty()) {
-
+                                                val order = Order(
+                                                    id = UUID.randomUUID().toString(),
+                                                    date = SimpleDateFormat("dd/MM/yyyy").format(
+                                                        Date()
+                                                    ),
+                                                    address = address,
+                                                    details = cart,
+                                                    totalPrice = getTotal.toString(),
+                                                    paymentMethod = selectedOption,
+                                                    status = OrderStatus.OPEN
+                                                )
+                                                viewModel.sendOrder(
+                                                    order = order,
+                                                    onSuccess = {
+                                                        viewModel.clearCart()
+                                                        navController.popBackStack()
+                                                        coroutineScope.launch {
+                                                            scaffoldState
+                                                                .snackbarHostState
+                                                                .showSnackbar("Pedido enviado")
+                                                        }
+                                                    },
+                                                    onFailure = {
+                                                        Toast.makeText(
+                                                            this,
+                                                            "Erro ao enviar o pedido",
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
+                                                    }
+                                                )
                                             } else {
                                                 Toast.makeText(
                                                     applicationContext,
@@ -193,8 +226,8 @@ class MainActivity : AppCompatActivity() {
                                 addSplashSignInScreen(
                                     googleButtonVisibility = googleButtonVisibility,
                                     onClick = {
-                                                    val signInIntent: Intent =
-                                                        mGoogleSignInClient.signInIntent
+                                        val signInIntent: Intent =
+                                            mGoogleSignInClient.signInIntent
                                         startActivityForResult(signInIntent, RC_SIGN_IN)
                                     },
                                     context = this@MainActivity,
@@ -213,7 +246,8 @@ class MainActivity : AppCompatActivity() {
                                     viewModel = viewModel,
                                     loading = loading,
                                     fabVisibility = fabVisibility,
-                                    loggedUser = loggedUser
+                                    loggedUser = loggedUser,
+                                    topBarVisibility = topBarVisibility
                                 )
                                 addCartScreen(
                                     navController = navController,
@@ -243,7 +277,7 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if(requestCode == RC_SIGN_IN){
+        if (requestCode == RC_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             viewModel.handleSignInResult(task, this)
         }
@@ -337,7 +371,7 @@ fun NavGraphBuilder.addSplashSignInScreen(
     context: Context,
     loggedUser: MutableState<Client?>,
     navController: NavController
-){
+) {
     composable(
         route = Screen.SplashSignInScreen.route,
         exitTransition = { _, _ ->
@@ -346,7 +380,7 @@ fun NavGraphBuilder.addSplashSignInScreen(
         popEnterTransition = { _, _ ->
             fadeIn(animationSpec = tween(500))
         },
-    ){
+    ) {
         SplashSignInScreen(
             onClick = onClick,
             googleButtonVisibility = googleButtonVisibility,
@@ -370,11 +404,12 @@ fun NavGraphBuilder.addHomeScreen(
     viewModel: OrdersViewModel,
     loading: Boolean,
     fabVisibility: MutableState<Boolean>,
+    topBarVisibility: MutableState<Boolean>,
     loggedUser: MutableState<Client?>
 ) {
     composable(
         route = Screen.HomeScreen.route,
-        enterTransition = { _, _->
+        enterTransition = { _, _ ->
             slideInHorizontally(
                 initialOffsetX = { -600 },
                 animationSpec = tween(300, easing = FastOutLinearInEasing)
@@ -399,7 +434,8 @@ fun NavGraphBuilder.addHomeScreen(
             viewModel = viewModel,
             loading = loading,
             fabVisibility = fabVisibility,
-            loggedUser = loggedUser
+            loggedUser = loggedUser,
+            topBarVisibility = topBarVisibility
         )
     }
 }
@@ -425,4 +461,11 @@ object Categories {
     const val PIZZAS = "Pizzas"
     const val DESSERT = "Dessert"
     const val DRINKS = "Drinks"
+}
+
+object OrderStatus {
+    const val OPEN = "Open"
+    const val ACCEPTED = "Accepted"
+    const val CANCELLED = "Cancelled"
+    const val DELIVERED = "Delivered"
 }

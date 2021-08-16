@@ -2,6 +2,7 @@ package com.example.pizzaproject.datasource.firestore
 
 import android.util.Log
 import com.example.pizzaproject.domain.models.Client
+import com.example.pizzaproject.domain.models.Order
 import com.example.pizzaproject.domain.models.Product
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -17,6 +18,7 @@ import javax.inject.Inject
 
 const val PRODUCTS = "Product"
 const val CLIENTS = "Clients"
+const val ORDERS = "Orders"
 
 @ExperimentalCoroutinesApi
 class FirestoreDatasourceImpl @Inject constructor(
@@ -38,6 +40,22 @@ class FirestoreDatasourceImpl @Inject constructor(
         firestore.collection(CLIENTS)
             .document(client.id)
             .set(client, SetOptions.merge())
+    }
+
+    override suspend fun sendOrder(
+        order: Order,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit) {
+        firestore
+            .collection(ORDERS)
+            .document(order.id)
+            .set(order, SetOptions.merge())
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener {
+                onFailure()
+            }
     }
 
 }
