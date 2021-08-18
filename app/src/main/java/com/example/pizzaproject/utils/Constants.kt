@@ -23,3 +23,5 @@ object OrderStatus {
     const val DELIVERED = "Entregue"
 
 }
+
+const val DEFAULT_IMAGE = R.drawable.ic_user_place_holder

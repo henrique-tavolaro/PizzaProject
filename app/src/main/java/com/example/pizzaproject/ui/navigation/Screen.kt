@@ -1,13 +1,32 @@
 package com.example.pizzaproject.ui.navigation
 
-sealed class Screen(val route: String){
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.ui.graphics.vector.ImageVector
 
-    object SplashSignInScreen: Screen(route = "splashSignInScreen")
+sealed class Screen(val route: String, val icon: ImageVector?, val title: String?){
 
-    object HomeScreen: Screen(route = "homeScreen")
+    object SplashSignInScreen: Screen(route = "splashSignInScreen", null, null)
 
-    object CartScreen: Screen(route = "cartScreen")
+    object HomeScreen: Screen
+        (route = "homeScreen",
+        icon = Icons.Filled.Storefront,
+        title = "Pedidos")
 
-    object CheckOutScreen: Screen(route = "checkoutScreen")
+    object CartScreen: Screen(route = "cartScreen", null, null)
+
+    object CheckOutScreen: Screen(route = "checkoutScreen", null, null)
+
+    object OrderHistoryScreen: Screen(
+        route = "orderHistoryScreen",
+        icon = Icons.Filled.AccessTime,
+        title = "Histórico")
+
+    object ChatScreen: Screen(
+        route = "chatScreen",
+    icon = Icons.Filled.Chat,
+    title = "Contato")
 
 }
