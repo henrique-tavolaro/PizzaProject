@@ -33,6 +33,7 @@ fun CheckOutScreen(
     viewModel: OrdersViewModel,
     total: Double,
     address: String,
+    observationTextField: String,
     fabVisibility: MutableState<Boolean>
 ){
     fabVisibility.value = true
@@ -112,7 +113,7 @@ fun CheckOutScreen(
                 modifier = Modifier
                     .padding(top = 8.dp, start = 8.dp, bottom = 16.dp, end = 16.dp)
                     .fillMaxWidth(),
-                value = viewModel.observationTextField.value,
+                value = observationTextField,
                 onValueChange = viewModel::onObservationChange,
                 label = {
                     Text("Observação")

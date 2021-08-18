@@ -17,4 +17,6 @@ interface FirestoreDatasource {
         onFailure: () -> Unit
         )
 
+    suspend fun getOrders(clientId: String) : List<Order>
+
 }

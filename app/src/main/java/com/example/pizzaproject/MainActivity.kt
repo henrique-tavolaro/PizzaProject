@@ -41,6 +41,7 @@ import com.example.pizzaproject.ui.screens.CheckOutScreen
 import com.example.pizzaproject.ui.screens.HomeScreen
 import com.example.pizzaproject.ui.screens.SplashSignInScreen
 import com.example.pizzaproject.ui.theme.PizzaProjectTheme
+import com.example.pizzaproject.utils.OrderStatus
 import com.google.accompanist.navigation.animation.AnimatedComposeNavigator
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -90,6 +91,8 @@ class MainActivity : AppCompatActivity() {
             val googleButtonVisibility = viewModel.googleButtonVisibility
             val loggedUser = viewModel.loggedUser
             val topBarVisibility = viewModel.topBarVisibility
+            val observationTextField = viewModel.observationTextField.value
+            val hasOrderOpen = viewModel.hasOrderOpen
 
             PizzaProjectTheme {
                 // A surface container using the 'background' color from the theme
@@ -178,13 +181,16 @@ class MainActivity : AppCompatActivity() {
                                         onClick = {
                                             if (address.isNotEmpty()) {
                                                 val order = Order(
-                                                    id = UUID.randomUUID().toString(),
+                                                    id = SimpleDateFormat("yyMMddHHmmssZ").format(Date()),
+                                                    clientId = loggedUser.value!!.id,
+                                                    clientName = loggedUser.value!!.name,
+                                                    observation = observationTextField,
                                                     date = SimpleDateFormat("dd/MM/yyyy").format(
                                                         Date()
                                                     ),
                                                     address = address,
                                                     details = cart,
-                                                    totalPrice = getTotal.toString(),
+                                                    totalPrice = getTotal,
                                                     paymentMethod = selectedOption,
                                                     status = OrderStatus.OPEN
                                                 )
@@ -198,6 +204,7 @@ class MainActivity : AppCompatActivity() {
                                                                 .snackbarHostState
                                                                 .showSnackbar("Pedido enviado")
                                                         }
+                                                        hasOrderOpen.value = true
                                                     },
                                                     onFailure = {
                                                         Toast.makeText(
@@ -266,6 +273,7 @@ class MainActivity : AppCompatActivity() {
                                     total = getTotal,
                                     address = address,
                                     fabVisibility = fabVisibility,
+                                    observationTextField = observationTextField
                                 )
                             })
                     }
@@ -295,6 +303,7 @@ fun NavGraphBuilder.addPaymentScreen(
     viewModel: OrdersViewModel,
     total: Double,
     address: String,
+    observationTextField: String,
     fabVisibility: MutableState<Boolean>
 ) {
     composable(
@@ -314,7 +323,8 @@ fun NavGraphBuilder.addPaymentScreen(
             viewModel = viewModel,
             total = total,
             address = address,
-            fabVisibility = fabVisibility
+            fabVisibility = fabVisibility,
+            observationTextField = observationTextField
         )
     }
 }
@@ -449,23 +459,4 @@ public fun rememberAnimatedNavController(): NavHostController {
     return navController.apply {
         navigatorProvider += animatedNavigator
     }
-}
-
-object Images {
-    const val image1 = R.drawable.pizza
-    const val image2 = R.drawable.pizza2
-    const val image3 = R.drawable.pizza3
-}
-
-object Categories {
-    const val PIZZAS = "Pizzas"
-    const val DESSERT = "Dessert"
-    const val DRINKS = "Drinks"
-}
-
-object OrderStatus {
-    const val OPEN = "Open"
-    const val ACCEPTED = "Accepted"
-    const val CANCELLED = "Cancelled"
-    const val DELIVERED = "Delivered"
 }

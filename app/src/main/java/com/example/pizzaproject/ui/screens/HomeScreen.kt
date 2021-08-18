@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
@@ -29,17 +28,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.example.pizzaproject.Categories
-import com.example.pizzaproject.Images
 import com.example.pizzaproject.domain.models.Client
 import com.example.pizzaproject.domain.models.Product
 import com.example.pizzaproject.ui.OrdersViewModel
 import com.example.pizzaproject.ui.ProductLazyColumnItem
 import com.example.pizzaproject.ui.composables.CategoryCard
 import com.example.pizzaproject.ui.composables.ImageCarousel
-import com.example.pizzaproject.ui.navigation.Screen
 import com.example.pizzaproject.ui.theme.StickHeaderColor
+import com.example.pizzaproject.utils.Categories
+import com.example.pizzaproject.utils.Images
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -66,7 +63,6 @@ fun HomeScreen(
     topBarVisibility.value = true
     bottomBarVisibility.value = getTotal != 0.0
     fabVisibility.value = false
-    Log.d("TAG1", loggedUser.value.toString())
     Column(
         modifier =
         Modifier
@@ -136,7 +132,6 @@ fun HomeScreen(
                     contextDescription = Categories.DRINKS
                 )
             }
-
         }
         Divider(
             thickness = 1.dp,
@@ -145,15 +140,13 @@ fun HomeScreen(
         LazyColumn(
             state = scrollState
         ) {
-
             item(
                 content = {
                     Text(
-                        text = loggedUser.value!!.name,
+                        text = "Bem-vindo ${loggedUser.value!!.name}",
                         modifier = Modifier.padding(8.dp)
                     )
                     ImageCarousel(Images.image1, Images.image2, Images.image3)
-
                 }
             )
 
@@ -162,7 +155,6 @@ fun HomeScreen(
 
                 val grouped = products
                     .groupBy { it.categoryOrder }
-
 
                 grouped.forEach { (initial, list) ->
                     stickyHeader {
@@ -184,8 +176,6 @@ fun HomeScreen(
                             fontSize = 20.sp,
                             fontStyle = FontStyle.Italic
                         )
-
-
                         Divider(
                             thickness = 1.dp,
                             modifier = Modifier.padding(
@@ -193,7 +183,6 @@ fun HomeScreen(
                                 end = 250.dp
                             )
                         )
-
                     }
 
                     items(items = list.sortedBy { it.price }) { product ->
@@ -202,17 +191,13 @@ fun HomeScreen(
                             viewModel = viewModel
                         )
                     }
-
-
                 }
             }
         }
 
         LaunchedEffect(scrollState) {
             snapshotFlow { scrollState.firstVisibleItemIndex }
-//
                 .distinctUntilChanged()
-//
                 .collect {
                     when {
                         it == 0 -> categorySelected.value = Categories.PIZZAS

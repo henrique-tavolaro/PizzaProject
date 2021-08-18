@@ -58,4 +58,13 @@ class FirestoreDatasourceImpl @Inject constructor(
             }
     }
 
+    override suspend fun getOrders(clientId: String): List<Order> {
+        return firestore
+            .collection(ORDERS)
+            .whereEqualTo("clientId", clientId)
+            .get()
+            .await()
+            .toObjects(Order::class.java)
+    }
+
 }

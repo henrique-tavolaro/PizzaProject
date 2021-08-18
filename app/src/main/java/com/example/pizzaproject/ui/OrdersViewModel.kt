@@ -7,9 +7,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pizzaproject.Categories
 import com.example.pizzaproject.domain.interactors.*
 import com.example.pizzaproject.domain.models.*
+import com.example.pizzaproject.utils.Categories
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
@@ -30,7 +30,8 @@ class OrdersViewModel @Inject constructor(
     private val clearCart: ClearCart,
     private val deleteProductFromOrder: DeleteProductFromOrder,
     private val addClient: AddClient,
-    private val sendOrder: SendOrder
+    private val sendOrder: SendOrder,
+    private val getOrders: GetOrders
 ) : ViewModel() {
 
     val loading = mutableStateOf(false)
@@ -56,6 +57,8 @@ class OrdersViewModel @Inject constructor(
     val radioOptions = listOf("Cartão", "Dinheiro")
 
     val topBarVisibility = mutableStateOf(false)
+
+    val hasOrderOpen = mutableStateOf(false)
 
     init {
         getProductList()
@@ -177,6 +180,25 @@ class OrdersViewModel @Inject constructor(
         viewModelScope.launch {
             sendOrder.execute(order, onSuccess, onFailure)
 
+        }
+    }
+
+    val orderList : MutableState<List<Order>> = mutableStateOf(listOf())
+
+    private fun getOrderList(clientId: String) {
+        viewModelScope.launch {
+            getOrders.execute(clientId).onEach { dataState ->
+                loading.value = dataState.loading
+
+                dataState.data?.let {
+                    orderList.value = it
+                }
+
+                dataState.error?.let {
+                    // TODO handle error
+                    Log.d("TAG", it)
+                }
+            }.launchIn(viewModelScope)
         }
     }
 }

@@ -47,6 +47,16 @@ object InteractorsModule {
 
     @ViewModelScoped
     @Provides
+    fun provideGetOrders(
+        firestore: FirestoreDatasource
+    ): GetOrders {
+        return GetOrders(
+            firestore = firestore
+        )
+    }
+
+    @ViewModelScoped
+    @Provides
     fun provideAddProductToOrder(
         dao: OrderDao
     ) : AddProductToOrder{
