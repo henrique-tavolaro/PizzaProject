@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.pizzaproject.domain.models.Client
+import com.example.pizzaproject.domain.models.Order
 import com.example.pizzaproject.domain.models.Product
 import com.example.pizzaproject.ui.OrdersViewModel
 import com.example.pizzaproject.ui.ProductLazyColumnItem
@@ -41,6 +42,7 @@ import com.example.pizzaproject.ui.navigation.Screen
 import com.example.pizzaproject.ui.theme.StickHeaderColor
 import com.example.pizzaproject.utils.Categories
 import com.example.pizzaproject.utils.Images
+import com.example.pizzaproject.utils.OrderStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -61,14 +63,16 @@ fun HomeScreen(
     loading: Boolean,
     loggedUser: MutableState<Client?>,
     scaffoldState: ScaffoldState,
-    navController: NavController
+    navController: NavController,
+    orderList: List<Order>?,
+    hasOpenOrder: MutableState<Boolean>
 ) {
     val stickyHeaderIndex1 = viewModel.stickyHeaderIndex1.value
     val stickyHeaderIndex2 = viewModel.stickyHeaderIndex2.value
     val bottomBarVisibility = viewModel.bottomBarVisibility
 
     bottomBarVisibility.value = total != 0.0
-
+    Log.d("TAG12", orderList.toString())
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
@@ -233,9 +237,16 @@ fun HomeScreen(
                             modifier = Modifier.padding(8.dp)
                         )
 
-//                        AnimatedVisibility(visible = orderList != null) {
-//                            OpenOrderCard(loggedUser = loggedUser)
-//                        }
+                       orderList?.let{
+                           for(i in orderList){
+                               if( i.status == OrderStatus.OPEN || i.status == OrderStatus.ACCEPTED){
+                                   hasOpenOrder.value = true
+                               }
+                           }
+                       }
+                        AnimatedVisibility(visible = hasOpenOrder.value) {
+                            OpenOrderCard(navController = navController)
+                        }
 
 
                         ImageCarousel(Images.image1, Images.image2, Images.image3)

@@ -41,6 +41,7 @@ fun SplashSignInScreen(
     navController: NavController,
     context: Context,
     loggedUser: MutableState<Client?>,
+    viewModel: OrdersViewModel
 ){
 
     val handler = Handler()
@@ -55,12 +56,16 @@ fun SplashSignInScreen(
             )
             loggedUser.value = client
             navController.navigate(Screen.HomeScreen.route)
+            viewModel.getOrderList(loggedUser.value!!.id)
         } else {
             googleButtonVisibility.value = true
         }
     }, 0)
 
-
+    if(loggedUser.value != null){
+        navController.navigate(Screen.HomeScreen.route)
+        viewModel.getOrderList(loggedUser.value!!.id)
+    }
 
         Column(
             modifier = Modifier

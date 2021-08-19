@@ -72,13 +72,8 @@ class MainActivity : AppCompatActivity() {
             val cart = viewModel.cart.value
             val googleButtonVisibility = viewModel.googleButtonVisibility
             val loggedUser = viewModel.loggedUser
-
-
             val orderList = viewModel.orderList.value
-
-
-            Log.d("Tag11", orderList.toString())
-
+            val hasOpenOrder = viewModel.hasOpenOrder
 
             PizzaProjectTheme {
                 // A surface container using the 'background' color from the theme
@@ -100,7 +95,8 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     context = this@MainActivity,
                                     loggedUser = loggedUser,
-                                    navController = navController
+                                    navController = navController,
+                                    viewModel = viewModel
                                 )
                                 addHomeScreen(
                                     total = total,
@@ -112,7 +108,9 @@ class MainActivity : AppCompatActivity() {
                                     loading = loading,
                                     loggedUser = loggedUser,
                                     scaffoldState = scaffoldState,
-                                    navController = navController
+                                    navController = navController,
+                                    orderList = orderList,
+                                    hasOpenOrder = hasOpenOrder
                                 )
                                 addCartScreen(
                                     navController = navController,
@@ -129,7 +127,8 @@ class MainActivity : AppCompatActivity() {
                                     navController = navController,
                                     loggedUser = loggedUser,
                                     cart = cart,
-                                    context = this@MainActivity
+                                    context = this@MainActivity,
+                                    hasOpenOrder = hasOpenOrder
                                 )
                                 addOrderHistoryScreen(
                                     loggedUser = loggedUser,
@@ -137,7 +136,8 @@ class MainActivity : AppCompatActivity() {
                                     navController = navController,
                                     total = total,
                                     orderList = orderList,
-                                    viewModel = viewModel
+                                    viewModel = viewModel,
+                                    scaffoldState = scaffoldState
                                 )
                                 addChatScreen()
                             })
@@ -168,7 +168,8 @@ fun NavGraphBuilder.addPaymentScreen(
     navController: NavController,
     loggedUser: MutableState<Client?>,
     context: Context,
-    cart: List<CartDetail>
+    cart: List<CartDetail>,
+    hasOpenOrder: MutableState<Boolean>
 ) {
     composable(
         route = Screen.CheckOutScreen.route,
@@ -187,7 +188,8 @@ fun NavGraphBuilder.addPaymentScreen(
             navController = navController,
             loggedUser = loggedUser,
             context = context,
-            cart = cart
+            cart = cart,
+            hasOpenOrder = hasOpenOrder
         )
     }
 }
@@ -242,7 +244,8 @@ fun NavGraphBuilder.addSplashSignInScreen(
     onClick: () -> Unit,
     context: Context,
     loggedUser: MutableState<Client?>,
-    navController: NavController
+    navController: NavController,
+    viewModel: OrdersViewModel
 ) {
     composable(
         route = Screen.SplashSignInScreen.route,
@@ -258,7 +261,8 @@ fun NavGraphBuilder.addSplashSignInScreen(
             googleButtonVisibility = googleButtonVisibility,
             context = context,
             loggedUser = loggedUser,
-            navController = navController
+            navController = navController,
+            viewModel = viewModel
         )
     }
 }
@@ -274,7 +278,9 @@ fun NavGraphBuilder.addHomeScreen(
     loading: Boolean,
     loggedUser: MutableState<Client?>,
     scaffoldState: ScaffoldState,
-    navController: NavController
+    navController: NavController,
+    orderList: List<Order>?,
+    hasOpenOrder: MutableState<Boolean>
 ) {
     composable(
         route = Screen.HomeScreen.route,
@@ -301,7 +307,9 @@ fun NavGraphBuilder.addHomeScreen(
             loading = loading,
             loggedUser = loggedUser,
             scaffoldState = scaffoldState,
-            navController = navController
+            navController = navController,
+            orderList = orderList,
+            hasOpenOrder = hasOpenOrder
         )
     }
 }
@@ -320,7 +328,8 @@ fun NavGraphBuilder.addOrderHistoryScreen(
     navController: NavController,
     total: Double,
     orderList: List<Order>?,
-    viewModel: OrdersViewModel
+    viewModel: OrdersViewModel,
+    scaffoldState: ScaffoldState,
 ) {
     composable(route = Screen.OrderHistoryScreen.route) {
         OrderHistoryScreen(
@@ -329,7 +338,8 @@ fun NavGraphBuilder.addOrderHistoryScreen(
             navController = navController,
             total = total,
             orderList = orderList,
-            viewModel = viewModel
+            viewModel = viewModel,
+            scaffoldState = scaffoldState
         )
     }
 }

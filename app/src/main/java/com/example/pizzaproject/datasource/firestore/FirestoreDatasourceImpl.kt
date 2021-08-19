@@ -58,13 +58,18 @@ class FirestoreDatasourceImpl @Inject constructor(
             }
     }
 
-    override suspend fun getOrders(clientId: String): List<Order> {
-        return firestore
+    override suspend fun getOrders(clientId: String): Flow<List<Order>?> = callbackFlow {
+        val collection = firestore
             .collection(ORDERS)
             .whereEqualTo("clientId", clientId)
-            .get()
-            .await()
-            .toObjects(Order::class.java)
+
+        val snapshotListener = collection.addSnapshotListener(){ snapshot, _ ->
+            this.trySend(snapshot!!.toObjects(Order::class.java))
+        }
+
+        awaitClose {
+            snapshotListener.remove()
+        }
     }
 
 }

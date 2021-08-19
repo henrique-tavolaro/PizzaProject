@@ -34,11 +34,10 @@ fun OrderHistoryScreen(
     navController: NavController,
     coroutineScope: CoroutineScope,
     total: Double,
-    viewModel: OrdersViewModel
+    viewModel: OrdersViewModel,
+    scaffoldState: ScaffoldState,
 ) {
-    viewModel.getOrderList(loggedUser.value!!.id)
 
-    val scaffoldState = rememberScaffoldState()
     Scaffold(
         topBar = {
             TopAppBar(

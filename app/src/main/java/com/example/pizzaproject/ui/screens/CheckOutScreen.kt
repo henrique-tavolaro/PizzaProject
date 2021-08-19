@@ -56,7 +56,8 @@ fun CheckOutScreen(
     navController: NavController,
     loggedUser: MutableState<Client?>,
     context: Context,
-    cart: List<CartDetail>
+    cart: List<CartDetail>,
+    hasOpenOrder: MutableState<Boolean>
 ) {
     val scaffoldState = rememberScaffoldState()
 
@@ -125,7 +126,7 @@ fun CheckOutScreen(
                 onClick = {
                     if (address.isNotEmpty()) {
                         val order = Order(
-                            id = SimpleDateFormat("yyMMddHHmmssZ").format(Date()),
+                            id = SimpleDateFormat("yyMMddHH").format(Date()),
                             clientId = loggedUser.value!!.id,
                             clientName = loggedUser.value!!.name,
                             observation = observationTextField,
@@ -148,6 +149,7 @@ fun CheckOutScreen(
                                         .snackbarHostState
                                         .showSnackbar("Pedido enviado")
                                 }
+                                hasOpenOrder.value = true
                             },
                             onFailure = {
                                 Toast.makeText(

@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pizzaproject.domain.models.Order
+import com.example.pizzaproject.utils.OrderStatus
 
 @OptIn(ExperimentalAnimationApi::class, androidx.compose.material.ExperimentalMaterialApi::class)
 @Composable
@@ -52,47 +53,68 @@ fun OrderHistoryLazyColumnItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .weight(1f)
                 ) {
                     Text(
-                        text = "Id: ${order.id}   Data: ${order.date}",
-                        fontSize = 14.sp
+                        text = "Id: ${order.id}",
+                        fontSize = 14.sp,
+                        color = if (order.status == OrderStatus.ACCEPTED || order.status == OrderStatus.OPEN) Color.Black
+                        else if (order.status == OrderStatus.DELIVERED) Color.Gray
+                        else Color.Red
                     )
                     Text(
-                        text = "Status: ${order.status}"
+                        text = "Data: ${order.date}",
+                        fontSize = 14.sp,
+                        color = if (order.status == OrderStatus.ACCEPTED || order.status == OrderStatus.OPEN) Color.Black
+                        else if (order.status == OrderStatus.DELIVERED) Color.Gray
+                        else Color.Red
+                    )
+                    Text(
+                        text = "Status: ${order.status}",
+                        color = if (order.status == OrderStatus.ACCEPTED || order.status == OrderStatus.OPEN) Color.Black
+                        else if (order.status == OrderStatus.DELIVERED) Color.Gray
+                        else Color.Red
                     )
                 }
                 Column(
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .weight(1f),
+                    horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = "Total: R$ ${order.totalPrice}0"
+                        text = "Total: R$ ${order.totalPrice}0",
+                        color = if (order.status == OrderStatus.ACCEPTED || order.status == OrderStatus.OPEN) Color.Black
+                        else if (order.status == OrderStatus.DELIVERED) Color.Gray
+                        else Color.Red
                     )
-                    Row(
-                        horizontalArrangement = Arrangement.End
+
+                    Text(
+                        text = "Ver detalhes do pedido",
+                        fontSize = 14.sp,
+                        fontStyle = FontStyle.Italic,
+                        color = if (order.status == OrderStatus.ACCEPTED || order.status == OrderStatus.OPEN) Color.Black
+                        else if (order.status == OrderStatus.DELIVERED) Color.Gray
+                        else Color.Red
+                    )
+                    IconButton(onClick = {
+                    }
                     ) {
-                        Text(
-                            text = "Ver detalhes do pedido",
-                            fontSize = 14.sp,
-                            fontStyle = FontStyle.Italic
-                        )
-                        IconButton(onClick = {
+                        if (!detailsVisibility.value) {
+                            Icon(
+                                Icons.Filled.KeyboardArrowDown,
+                                "see details icon"
+                            )
+                        } else {
+                            Icon(
+                                Icons.Filled.KeyboardArrowUp,
+                                "see details icon"
+                            )
                         }
-                        ) {
-                            if (!detailsVisibility.value) {
-                                Icon(
-                                    Icons.Filled.KeyboardArrowDown,
-                                    "see details icon"
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Filled.KeyboardArrowUp,
-                                    "see details icon"
-                                )
-                            }
 
 
-                        }
                     }
                 }
             }

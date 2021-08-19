@@ -10,10 +10,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.pizzaproject.domain.interactors.*
 import com.example.pizzaproject.domain.models.*
 import com.example.pizzaproject.utils.Categories
+import com.example.pizzaproject.utils.OrdersEvent
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -52,11 +54,45 @@ class OrdersViewModel @Inject constructor(
 
     val radioOptions = listOf("Cartão", "Dinheiro")
 
+    val hasOpenOrder = mutableStateOf(false)
+
+    val totalSum = mutableStateOf(0.0)
+
+    val cart = mutableStateOf<List<CartDetail>>(listOf())
+
+    val orderList : MutableState<List<Order>> = mutableStateOf(listOf())
+
+
     init {
-        getProductList()
-        getTotalSum()
-        getCart()
+        onTriggerEvent(OrdersEvent.GetTotalSumEvent)
+        onTriggerEvent(OrdersEvent.GetCartEvent)
+        onTriggerEvent(OrdersEvent.GetProductListEvent)
     }
+
+    fun onTriggerEvent(event: OrdersEvent){
+        viewModelScope.launch {
+            try {
+                when(event){
+                    is OrdersEvent.GetCartEvent -> {
+                        getCart()
+                    }
+                    is OrdersEvent.GetProductListEvent -> {
+                        getProductList()
+                    }
+                    is OrdersEvent.GetTotalSumEvent -> {
+                        getTotalSum()
+                    }
+                }
+            } catch (e: Exception){
+                Log.e("TAG11", "launchJob: Exception: ${e}, ${e.cause}")
+                e.printStackTrace()
+            }
+            finally {
+                Log.d("TAG111", "launchJob: finally called.")
+            }
+        }
+    }
+
 
     private fun getProductList() {
         viewModelScope.launch {
@@ -92,7 +128,6 @@ class OrdersViewModel @Inject constructor(
         }
     }
 
-    val totalSum = mutableStateOf(0.0)
 
     fun getTotalSum() {
         viewModelScope.launch {
@@ -105,8 +140,6 @@ class OrdersViewModel @Inject constructor(
             }
         }
     }
-
-    val cart = mutableStateOf<List<CartDetail>>(listOf())
 
     fun getCart() {
         viewModelScope.launch {
@@ -174,23 +207,13 @@ class OrdersViewModel @Inject constructor(
         }
     }
 
-    val orderList : MutableState<List<Order>> = mutableStateOf(listOf())
-
     fun getOrderList(clientId: String) {
         viewModelScope.launch {
-            getOrders.execute(clientId).onEach { dataState ->
-                loading.value = dataState.loading
-
-                dataState.data?.let {
-                    orderList.value = it
-                }
-
-                dataState.error?.let {
-                    // TODO handle error
-                    Log.d("TAG", it)
-                }
-            }.launchIn(viewModelScope)
+            getOrders.execute(clientId).collect{
+                orderList.value = it!!
+            }
         }
+
     }
 
 }

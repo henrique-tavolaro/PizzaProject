@@ -12,17 +12,7 @@ class GetOrders(
 
     suspend fun execute(
         clientId: String
-    ): Flow<DataState<List<Order>>> = flow {
-        try {
-//            emit(DataState.loading())
-            val orders = firestore.getOrders(clientId)
-
-            emit(DataState.success(orders))
-        } catch (e: Exception) {
-            emit(DataState.error<List<Order>>(e.message ?: "Unknown Error"))
-        }
-
-
+    ): Flow<List<Order>?> {
+       return firestore.getOrders(clientId)
     }
-
 }
