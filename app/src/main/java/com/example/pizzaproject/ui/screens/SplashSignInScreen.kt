@@ -1,8 +1,6 @@
 package com.example.pizzaproject.ui.screens
 
 import android.content.Context
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.material.Text
 import android.content.Intent
 import android.os.Handler
@@ -15,8 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,10 +24,13 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation.findNavController
 import androidx.navigation.findNavController
 import com.example.pizzaproject.domain.models.Client
+import com.example.pizzaproject.domain.models.Order
+import com.example.pizzaproject.ui.OrdersViewModel
 import com.example.pizzaproject.ui.composables.GoogleButton
 import com.example.pizzaproject.ui.navigation.Screen
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import kotlinx.coroutines.flow.collect
 
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
@@ -40,7 +40,7 @@ fun SplashSignInScreen(
     googleButtonVisibility: MutableState<Boolean>,
     navController: NavController,
     context: Context,
-    loggedUser: MutableState<Client?>
+    loggedUser: MutableState<Client?>,
 ){
 
     val handler = Handler()
@@ -58,7 +58,7 @@ fun SplashSignInScreen(
         } else {
             googleButtonVisibility.value = true
         }
-    }, 3000)
+    }, 0)
 
 
 

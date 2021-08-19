@@ -112,15 +112,7 @@ fun DrawerContent(
         items.forEach { item ->
             DrawerItem(item = item, selected = currentRoute == item.route, onItemClick = {
                 navController.navigate(item.route) {
-                    navController.graph.startDestinationRoute?.let { route ->
-                        popUpTo(route) {
-                            saveState = true
-                        }
-                    }
-                    launchSingleTop = true
-//                    restoreState = true
-                }
-                // Close drawer
+                    launchSingleTop = true}
                 coroutineScope.launch {
                     scaffoldState.drawerState.close()
                 }
@@ -132,26 +124,26 @@ fun DrawerContent(
 
 @Composable
 fun DrawerItem(item: Screen, selected: Boolean, onItemClick: (Screen) -> Unit) {
-//    val background = if (selected) MaterialTheme.colors.primaryVariant else android.R.color.transparent
+    val background = if (selected) Color.LightGray.copy(alpha = 0.4f) else Color.Transparent
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = { onItemClick(item) })
             .height(45.dp)
-//            .background(colorResource(id = background as Int))
-            .padding(start = 10.dp)
+            .background(background)
+            .padding(start = 16.dp)
     ) {
         Image(
             imageVector = item.icon!!,
             contentDescription = item.title,
-            colorFilter = ColorFilter.tint(Color.White),
+//            colorFilter = ColorFilter.tint(Color.White),
             contentScale = ContentScale.Fit,
             modifier = Modifier
-                .height(35.dp)
-                .width(35.dp)
+                .height(28.dp)
+                .width(28.dp)
         )
-        Spacer(modifier = Modifier.width(7.dp))
+        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = item.title!!,
             fontSize = 18.sp,

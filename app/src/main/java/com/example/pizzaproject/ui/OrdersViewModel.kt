@@ -46,19 +46,11 @@ class OrdersViewModel @Inject constructor(
 
     val bottomBarVisibility = mutableStateOf(false)
 
-    val isCartOpen = mutableStateOf(false)
-
-    val floatingActionButtonVisibility = mutableStateOf(false)
-
     val googleButtonVisibility = mutableStateOf(false)
 
     val loggedUser: MutableState<Client?> = mutableStateOf(null)
 
     val radioOptions = listOf("Cartão", "Dinheiro")
-
-    val topBarVisibility = mutableStateOf(false)
-
-    val hasOrderOpen = mutableStateOf(false)
 
     init {
         getProductList()
@@ -74,7 +66,6 @@ class OrdersViewModel @Inject constructor(
                 dataState.data?.let {
                     productsList.value = it
                     getStickyHeadersIndex(it)
-                    Log.d("TAG", it.toString())
                 }
 
                 dataState.error?.let {
@@ -185,7 +176,7 @@ class OrdersViewModel @Inject constructor(
 
     val orderList : MutableState<List<Order>> = mutableStateOf(listOf())
 
-    private fun getOrderList(clientId: String) {
+    fun getOrderList(clientId: String) {
         viewModelScope.launch {
             getOrders.execute(clientId).onEach { dataState ->
                 loading.value = dataState.loading
@@ -201,4 +192,5 @@ class OrdersViewModel @Inject constructor(
             }.launchIn(viewModelScope)
         }
     }
+
 }

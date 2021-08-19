@@ -10,10 +10,11 @@ class GetOrders(
     private val firestore: FirestoreDatasource
 ) {
 
-    suspend fun execute(clientId: String) : Flow<DataState<List<Order>>> = flow {
+    suspend fun execute(
+        clientId: String
+    ): Flow<DataState<List<Order>>> = flow {
         try {
-            emit(DataState.loading())
-
+//            emit(DataState.loading())
             val orders = firestore.getOrders(clientId)
 
             emit(DataState.success(orders))

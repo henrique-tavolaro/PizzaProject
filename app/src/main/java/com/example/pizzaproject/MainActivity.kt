@@ -4,37 +4,23 @@ package com.example.pizzaproject
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.opengl.Visibility
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Black
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -45,15 +31,9 @@ import com.example.pizzaproject.domain.models.Client
 import com.example.pizzaproject.domain.models.Order
 import com.example.pizzaproject.domain.models.Product
 import com.example.pizzaproject.ui.OrdersViewModel
-import com.example.pizzaproject.ui.composables.DrawerContent
-import com.example.pizzaproject.ui.composables.loadImageUri
 import com.example.pizzaproject.ui.navigation.Screen
 import com.example.pizzaproject.ui.screens.*
 import com.example.pizzaproject.ui.theme.PizzaProjectTheme
-import com.example.pizzaproject.ui.theme.Purple500
-import com.example.pizzaproject.ui.theme.Purple700
-import com.example.pizzaproject.utils.DEFAULT_IMAGE
-import com.example.pizzaproject.utils.OrderStatus
 import com.google.accompanist.navigation.animation.AnimatedComposeNavigator
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -61,9 +41,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
+import kotlinx.coroutines.coroutineScope
 
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
@@ -89,22 +67,18 @@ class MainActivity : AppCompatActivity() {
             val scaffoldState = rememberScaffoldState()
             val coroutineScope = rememberCoroutineScope()
             val products = viewModel.productsList.value
-            val stickyHeaderIndex1 = viewModel.stickyHeaderIndex1.value
-            val stickyHeaderIndex2 = viewModel.stickyHeaderIndex2.value
             val loading = viewModel.loading.value
-            val getTotal = viewModel.totalSum.value
-            val bottomBarVisibility = viewModel.bottomBarVisibility
-            val isCartOpen = viewModel.isCartOpen
+            val total = viewModel.totalSum.value
             val cart = viewModel.cart.value
-            val radioOptions = viewModel.radioOptions
-            val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
-            val fabVisibility = viewModel.floatingActionButtonVisibility
-            val address = viewModel.addressTextField.value
             val googleButtonVisibility = viewModel.googleButtonVisibility
             val loggedUser = viewModel.loggedUser
-            val topBarVisibility = viewModel.topBarVisibility
-            val observationTextField = viewModel.observationTextField.value
-            val hasOrderOpen = viewModel.hasOrderOpen
+
+
+            val orderList = viewModel.orderList.value
+
+
+            Log.d("Tag11", orderList.toString())
+
 
             PizzaProjectTheme {
                 // A surface container using the 'background' color from the theme
@@ -113,148 +87,6 @@ class MainActivity : AppCompatActivity() {
                     color = MaterialTheme.colors.background
                 ) {
 
-                    Scaffold(
-                        scaffoldState = scaffoldState,
-                        topBar = {
-                            AnimatedVisibility(visible = topBarVisibility.value)
-                            {
-                                TopAppBar(
-                                    title = {
-                                        Text("Mario & Luigi")
-                                    },
-                                    navigationIcon = {
-                                        IconButton(onClick = {
-                                            coroutineScope.launch {
-                                                scaffoldState.drawerState.open()
-                                            }
-                                        }) {
-                                            Icon(Icons.Default.Menu, contentDescription = "drawer menu icon")
-                                        }
-                                    },
-                                    actions = {
-                                        Card(
-                                            modifier = Modifier.padding(4.dp),
-                                            shape = RoundedCornerShape(10.dp),
-                                            onClick = {
-                                                if (!isCartOpen.value) {
-                                                    navController.navigate(Screen.CartScreen.route)
-                                                    isCartOpen.value = !isCartOpen.value
-                                                } else {
-                                                    navController.popBackStack()
-                                                    isCartOpen.value = !isCartOpen.value
-                                                }
-                                            }
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(4.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Filled.ShoppingCart,
-                                                    tint = Black,
-                                                    contentDescription = "shopping cart"
-                                                )
-                                                Text(
-                                                    "R$ ${getTotal}0",
-                                                    modifier = Modifier.padding(end = 4.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                )
-                            }
-                        },
-                        bottomBar = {
-                            AnimatedVisibility(
-                                visibleState = MutableTransitionState(bottomBarVisibility.value),
-                                enter = slideInVertically(
-                                    initialOffsetY = { -60 },
-                                    animationSpec = tween(500, easing = LinearEasing)
-                                ),
-                                exit = slideOutVertically(
-                                    targetOffsetY = { -60 },
-                                    animationSpec = tween(500, easing = LinearEasing)
-                                )
-                            ) {
-                                Button(
-                                    onClick = {
-                                        navController.navigate(Screen.CartScreen.route)
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(60.dp)
-                                ) {
-                                    Text(
-                                        text = "Finalizar Pedido",
-                                        modifier = Modifier.align(Alignment.CenterVertically),
-                                        fontSize = 18.sp
-                                    )
-                                }
-                            }
-                        },
-                        drawerContent = {
-                           DrawerContent(
-                               loggedUser = loggedUser,
-                               navController = navController,
-                               scaffoldState = scaffoldState,
-                               coroutineScope = coroutineScope
-                           )
-                        },
-                        floatingActionButton = {
-                            Crossfade(targetState = fabVisibility.value) {
-                                if (it) {
-                                    ExtendedFloatingActionButton(
-                                        modifier = Modifier
-                                            .padding(bottom = 16.dp, end = 16.dp),
-                                        text = { Text("Enviar pedido") },
-                                        onClick = {
-                                            if (address.isNotEmpty()) {
-                                                val order = Order(
-                                                    id = SimpleDateFormat("yyMMddHHmmssZ").format(Date()),
-                                                    clientId = loggedUser.value!!.id,
-                                                    clientName = loggedUser.value!!.name,
-                                                    observation = observationTextField,
-                                                    date = SimpleDateFormat("dd/MM/yyyy").format(
-                                                        Date()
-                                                    ),
-                                                    address = address,
-                                                    details = cart,
-                                                    totalPrice = getTotal,
-                                                    paymentMethod = selectedOption,
-                                                    status = OrderStatus.OPEN
-                                                )
-                                                viewModel.sendOrder(
-                                                    order = order,
-                                                    onSuccess = {
-                                                        viewModel.clearCart()
-                                                        navController.popBackStack()
-                                                        coroutineScope.launch {
-                                                            scaffoldState
-                                                                .snackbarHostState
-                                                                .showSnackbar("Pedido enviado")
-                                                        }
-                                                        hasOrderOpen.value = true
-                                                    },
-                                                    onFailure = {
-                                                        Toast.makeText(
-                                                            this,
-                                                            "Erro ao enviar o pedido",
-                                                            Toast.LENGTH_LONG
-                                                        ).show()
-                                                    }
-                                                )
-                                            } else {
-                                                Toast.makeText(
-                                                    applicationContext,
-                                                    "Insira o endereço para enviar o pedido",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                            }
-                                        })
-                                }
-                            }
-                        }
-                    ) {
                         AnimatedNavHost(
                             navController = navController,
                             startDestination = Screen.SplashSignInScreen.route,
@@ -271,43 +103,45 @@ class MainActivity : AppCompatActivity() {
                                     navController = navController
                                 )
                                 addHomeScreen(
-                                    bottomBarVisibility = bottomBarVisibility,
-                                    getTotal = getTotal,
+                                    total = total,
                                     categorySelected = categorySelected,
                                     coroutineScope = coroutineScope,
                                     scrollState = scrollState,
-                                    stickyHeaderIndex1 = stickyHeaderIndex1,
-                                    stickyHeaderIndex2 = stickyHeaderIndex2,
                                     products = products,
                                     viewModel = viewModel,
                                     loading = loading,
-                                    fabVisibility = fabVisibility,
                                     loggedUser = loggedUser,
-                                    topBarVisibility = topBarVisibility
+                                    scaffoldState = scaffoldState,
+                                    navController = navController
                                 )
                                 addCartScreen(
                                     navController = navController,
                                     cart = cart,
-                                    bottomBarVisibility = bottomBarVisibility,
-                                    total = getTotal,
-                                    isCartOpen = isCartOpen,
+                                    total = total,
                                     viewModel = viewModel,
-                                    fabVisibility = fabVisibility,
+                                    coroutineScope = coroutineScope,
+                                    loggedUser = loggedUser,
                                 )
                                 addPaymentScreen(
-                                    radioOptions = radioOptions,
-                                    selectedOption = selectedOption,
-                                    onOptionSelected = onOptionSelected,
                                     viewModel = viewModel,
-                                    total = getTotal,
-                                    address = address,
-                                    fabVisibility = fabVisibility,
-                                    observationTextField = observationTextField
+                                    total = total,
+                                    coroutineScope = coroutineScope,
+                                    navController = navController,
+                                    loggedUser = loggedUser,
+                                    cart = cart,
+                                    context = this@MainActivity
                                 )
-                                addOrderHistoryScreen()
+                                addOrderHistoryScreen(
+                                    loggedUser = loggedUser,
+                                    coroutineScope = coroutineScope,
+                                    navController = navController,
+                                    total = total,
+                                    orderList = orderList,
+                                    viewModel = viewModel
+                                )
                                 addChatScreen()
                             })
-                    }
+
                 }
             }
         }
@@ -328,14 +162,13 @@ const val RC_SIGN_IN = 123
 
 @ExperimentalAnimationApi
 fun NavGraphBuilder.addPaymentScreen(
-    radioOptions: List<String>,
-    selectedOption: String,
-    onOptionSelected: (String) -> Unit,
     viewModel: OrdersViewModel,
     total: Double,
-    address: String,
-    observationTextField: String,
-    fabVisibility: MutableState<Boolean>
+    coroutineScope: CoroutineScope,
+    navController: NavController,
+    loggedUser: MutableState<Client?>,
+    context: Context,
+    cart: List<CartDetail>
 ) {
     composable(
         route = Screen.CheckOutScreen.route,
@@ -348,27 +181,26 @@ fun NavGraphBuilder.addPaymentScreen(
         }
     ) {
         CheckOutScreen(
-            radioOptions = radioOptions,
-            selectedOption = selectedOption,
-            onOptionSelected = onOptionSelected,
             viewModel = viewModel,
             total = total,
-            address = address,
-            fabVisibility = fabVisibility,
-            observationTextField = observationTextField
+            coroutineScope = coroutineScope,
+            navController = navController,
+            loggedUser = loggedUser,
+            context = context,
+            cart = cart
         )
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @ExperimentalAnimationApi
 fun NavGraphBuilder.addCartScreen(
-    bottomBarVisibility: MutableState<Boolean>,
     cart: List<CartDetail>,
     navController: NavController,
     total: Double,
-    isCartOpen: MutableState<Boolean>,
     viewModel: OrdersViewModel,
-    fabVisibility: MutableState<Boolean>
+    coroutineScope: CoroutineScope,
+    loggedUser: MutableState<Client?>
 ) {
     composable(
         route = Screen.CartScreen.route,
@@ -394,12 +226,11 @@ fun NavGraphBuilder.addCartScreen(
         ) {
         CartScreen(
             navController = navController,
-            bottomBarVisibility = bottomBarVisibility,
             cart = cart,
             total = total,
-            isCartOpen = isCartOpen,
             viewModel = viewModel,
-            fabVisibility = fabVisibility
+            coroutineScope = coroutineScope,
+            loggedUser = loggedUser,
         )
     }
 }
@@ -434,19 +265,16 @@ fun NavGraphBuilder.addSplashSignInScreen(
 
 @ExperimentalAnimationApi
 fun NavGraphBuilder.addHomeScreen(
-    bottomBarVisibility: MutableState<Boolean>,
-    getTotal: Double,
+    total: Double,
     categorySelected: MutableState<String>,
     coroutineScope: CoroutineScope,
     scrollState: LazyListState,
-    stickyHeaderIndex1: Int,
-    stickyHeaderIndex2: Int,
     products: List<Product>,
     viewModel: OrdersViewModel,
     loading: Boolean,
-    fabVisibility: MutableState<Boolean>,
-    topBarVisibility: MutableState<Boolean>,
-    loggedUser: MutableState<Client?>
+    loggedUser: MutableState<Client?>,
+    scaffoldState: ScaffoldState,
+    navController: NavController
 ) {
     composable(
         route = Screen.HomeScreen.route,
@@ -464,34 +292,45 @@ fun NavGraphBuilder.addHomeScreen(
         }
     ) {
         HomeScreen(
-            bottomBarVisibility = bottomBarVisibility,
-            getTotal = getTotal,
+            total = total,
             categorySelected = categorySelected,
             coroutineScope = coroutineScope,
             scrollState = scrollState,
-            stickyHeaderIndex1 = stickyHeaderIndex1,
-            stickyHeaderIndex2 = stickyHeaderIndex2,
             products = products,
             viewModel = viewModel,
             loading = loading,
-            fabVisibility = fabVisibility,
             loggedUser = loggedUser,
-            topBarVisibility = topBarVisibility
+            scaffoldState = scaffoldState,
+            navController = navController
         )
     }
 }
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.addChatScreen(){
-    composable(route = Screen.ChatScreen.route){
+fun NavGraphBuilder.addChatScreen() {
+    composable(route = Screen.ChatScreen.route) {
         ChatScreen()
     }
 }
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.addOrderHistoryScreen(){
-    composable(route = Screen.OrderHistoryScreen.route){
-        OrderHistoryScreen()
+fun NavGraphBuilder.addOrderHistoryScreen(
+    loggedUser: MutableState<Client?>,
+    coroutineScope: CoroutineScope,
+    navController: NavController,
+    total: Double,
+    orderList: List<Order>?,
+    viewModel: OrdersViewModel
+) {
+    composable(route = Screen.OrderHistoryScreen.route) {
+        OrderHistoryScreen(
+            loggedUser = loggedUser,
+            coroutineScope = coroutineScope,
+            navController = navController,
+            total = total,
+            orderList = orderList,
+            viewModel = viewModel
+        )
     }
 }
 

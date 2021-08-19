@@ -11,8 +11,8 @@ object Images {
 
 object Categories {
     const val PIZZAS = "Pizzas"
-    const val DESSERT = "Dessert"
-    const val DRINKS = "Drinks"
+    const val DESSERT = "Sobremesas"
+    const val DRINKS = "Bebidas"
 }
 
 object OrderStatus {
