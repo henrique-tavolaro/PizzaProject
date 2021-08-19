@@ -13,9 +13,9 @@ private val DarkColorPalette = darkColors(
 )
 
 private val LightColorPalette = lightColors(
-    primary = StickHeaderColor,
-    primaryVariant = StickHeaderColor,
-    secondary = Teal200
+    primary = Red500,
+    primaryVariant = Red700,
+    secondary = Red300
 
     /* Other default colors to override
     background = Color.White,

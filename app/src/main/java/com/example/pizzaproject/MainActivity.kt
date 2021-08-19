@@ -34,6 +34,7 @@ import com.example.pizzaproject.ui.OrdersViewModel
 import com.example.pizzaproject.ui.navigation.Screen
 import com.example.pizzaproject.ui.screens.*
 import com.example.pizzaproject.ui.theme.PizzaProjectTheme
+import com.example.pizzaproject.utils.OrdersEvent
 import com.google.accompanist.navigation.animation.AnimatedComposeNavigator
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -152,7 +153,7 @@ class MainActivity : AppCompatActivity() {
 
         if (requestCode == RC_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            viewModel.handleSignInResult(task, this)
+            viewModel.onTriggerEvent(OrdersEvent.HandleSignInResultEvent(task, this))
         }
     }
 }

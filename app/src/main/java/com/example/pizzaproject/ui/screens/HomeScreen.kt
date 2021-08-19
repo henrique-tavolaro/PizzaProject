@@ -268,7 +268,7 @@ fun HomeScreen(
                                     .background(
                                         brush = Brush.horizontalGradient(
                                             colors = listOf(
-                                                StickHeaderColor,
+                                                MaterialTheme.colors.secondary,
                                                 Color.Transparent
                                             )
                                         )

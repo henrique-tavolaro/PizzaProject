@@ -29,6 +29,8 @@ import com.example.pizzaproject.domain.models.Client
 import com.example.pizzaproject.ui.navigation.Screen
 import com.example.pizzaproject.ui.theme.Purple500
 import com.example.pizzaproject.ui.theme.Purple700
+import com.example.pizzaproject.ui.theme.Red300
+import com.example.pizzaproject.ui.theme.Red700
 import com.example.pizzaproject.utils.DEFAULT_IMAGE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -54,8 +56,8 @@ fun DrawerContent(
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
-                            Purple500,
-                            Purple700
+                            Red700,
+                            Red300
                         )
                     )
                 )

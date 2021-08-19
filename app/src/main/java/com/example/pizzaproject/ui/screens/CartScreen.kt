@@ -1,11 +1,5 @@
 package com.example.pizzaproject.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,17 +8,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Cancel
-import androidx.compose.material.icons.rounded.Cake
-import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.sharp.Cancel
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,6 +25,7 @@ import com.example.pizzaproject.ui.OrdersViewModel
 import com.example.pizzaproject.ui.composables.DrawerContent
 import com.example.pizzaproject.ui.navigation.Screen
 import com.example.pizzaproject.ui.theme.StickHeaderColor
+import com.example.pizzaproject.utils.OrdersEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -113,7 +103,7 @@ fun CartScreen(
                 Text(text = "Esvaziar carrinho")
                 IconButton(
                     onClick = {
-                        viewModel.clearCart()
+                        viewModel.onTriggerEvent(OrdersEvent.ClearCartEvent)
 
                     }
                 ){
@@ -128,7 +118,7 @@ fun CartScreen(
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                StickHeaderColor,
+                                MaterialTheme.colors.secondary,
                                 Color.Transparent
                             )
                         )
@@ -163,7 +153,7 @@ fun CartScreen(
                                 )
                                 IconButton(
                                     onClick = {
-                                        viewModel.deleteProductFromOrder(it.product)
+                                        viewModel.onTriggerEvent(OrdersEvent.DeleteProductFromOrderEvent(it.product))
                                     }) {
                                     Icon(Icons.Filled.Clear, contentDescription = "Delete item icon")
                                 }

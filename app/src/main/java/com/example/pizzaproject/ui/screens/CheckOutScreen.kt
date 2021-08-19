@@ -42,6 +42,7 @@ import com.example.pizzaproject.ui.composables.SimpleRadioButtonComponent
 import com.example.pizzaproject.ui.navigation.Screen
 import com.example.pizzaproject.ui.theme.StickHeaderColor
 import com.example.pizzaproject.utils.OrderStatus
+import com.example.pizzaproject.utils.OrdersEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -139,10 +140,11 @@ fun CheckOutScreen(
                             paymentMethod = selectedOption,
                             status = OrderStatus.OPEN
                         )
-                        viewModel.sendOrder(
+                        viewModel.onTriggerEvent(OrdersEvent.SendOrderEvent(
                             order = order,
                             onSuccess = {
-                                viewModel.clearCart()
+                                viewModel.onTriggerEvent(
+                                    OrdersEvent.ClearCartEvent)
                                 navController.popBackStack()
                                 coroutineScope.launch {
                                     scaffoldState
@@ -158,7 +160,7 @@ fun CheckOutScreen(
                                     Toast.LENGTH_LONG
                                 ).show()
                             }
-                        )
+                        ))
                     } else {
                         Toast.makeText(
                             context,
@@ -185,7 +187,7 @@ fun CheckOutScreen(
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
-                                    StickHeaderColor,
+                                    MaterialTheme.colors.secondary,
                                     Color.Transparent
                                 )
                             )
@@ -206,7 +208,7 @@ fun CheckOutScreen(
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
-                                    StickHeaderColor,
+                                    MaterialTheme.colors.secondary,
                                     Color.Transparent
                                 )
                             )
@@ -232,7 +234,7 @@ fun CheckOutScreen(
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
-                                    StickHeaderColor,
+                                    MaterialTheme.colors.secondary,
                                     Color.Transparent
                                 )
                             )

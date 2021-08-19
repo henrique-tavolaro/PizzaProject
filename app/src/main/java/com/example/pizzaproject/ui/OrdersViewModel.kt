@@ -15,7 +15,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -62,6 +61,17 @@ class OrdersViewModel @Inject constructor(
 
     val orderList : MutableState<List<Order>> = mutableStateOf(listOf())
 
+    val addressTextField = mutableStateOf("")
+
+    fun onAddressChange(text: String) {
+        addressTextField.value = text
+    }
+
+    val observationTextField = mutableStateOf("")
+
+    fun onObservationChange(text: String) {
+        observationTextField.value = text
+    }
 
     init {
         onTriggerEvent(OrdersEvent.GetTotalSumEvent)
@@ -82,13 +92,32 @@ class OrdersViewModel @Inject constructor(
                     is OrdersEvent.GetTotalSumEvent -> {
                         getTotalSum()
                     }
+                    is OrdersEvent.SendOrderEvent -> {
+                        sendOrder(event.order, event.onSuccess, event.onFailure)
+                    }
+                    is OrdersEvent.GetOrderListEvent -> {
+                        getOrderList(event.clientId)
+                    }
+                    is OrdersEvent.AddProductToOrderEvent -> {
+                        addProductToOrder(event.orderInProgress)
+                    }
+                    is OrdersEvent.DeleteProductFromOrderEvent -> {
+                        deleteProductFromOrder(event.product)
+                    }
+                    is OrdersEvent.ClearCartEvent -> {
+                        clearCart()
+                    }
+                    is OrdersEvent.HandleSignInResultEvent -> {
+                        handleSignInResult(event.task, event.context)
+                    }
+
                 }
             } catch (e: Exception){
-                Log.e("TAG11", "launchJob: Exception: ${e}, ${e.cause}")
+                Log.e("TAG", "launchJob: Exception: ${e}, ${e.cause}")
                 e.printStackTrace()
             }
             finally {
-                Log.d("TAG111", "launchJob: finally called.")
+                Log.d("TAG", "launchJob: finally called.")
             }
         }
     }
@@ -122,14 +151,14 @@ class OrdersViewModel @Inject constructor(
         }
     }
 
-    fun addProductToOrder(orderInProgress: OrderInProgress) {
+    private fun addProductToOrder(orderInProgress: OrderInProgress) {
         viewModelScope.launch {
             addProductToOrder.execute(orderInProgress)
         }
     }
 
 
-    fun getTotalSum() {
+    private fun getTotalSum() {
         viewModelScope.launch {
             getOrderTotal.execute().collect {
                 if (it != null) {
@@ -141,7 +170,7 @@ class OrdersViewModel @Inject constructor(
         }
     }
 
-    fun getCart() {
+    private fun getCart() {
         viewModelScope.launch {
             getCart.execute().collect {
                 if (it != null) {
@@ -151,37 +180,25 @@ class OrdersViewModel @Inject constructor(
         }
     }
 
-    fun clearCart() {
+    private fun clearCart() {
         viewModelScope.launch {
             clearCart.execute()
         }
     }
 
-    fun deleteProductFromOrder(product: String) {
+    private fun deleteProductFromOrder(product: String) {
         viewModelScope.launch {
             deleteProductFromOrder.execute(product)
         }
     }
 
-    val addressTextField = mutableStateOf("")
-
-    fun onAddressChange(text: String) {
-        addressTextField.value = text
-    }
-
-    val observationTextField = mutableStateOf("")
-
-    fun onObservationChange(text: String) {
-        observationTextField.value = text
-    }
-
-    fun addClient(client: Client) {
+    private fun addClient(client: Client) {
         viewModelScope.launch {
             addClient.execute(client)
         }
     }
 
-    fun handleSignInResult(task: Task<GoogleSignInAccount>, context: Context) {
+    private fun handleSignInResult(task: Task<GoogleSignInAccount>, context: Context) {
         try {
             val account: GoogleSignInAccount = task.getResult(ApiException::class.java)!!
 
@@ -198,7 +215,7 @@ class OrdersViewModel @Inject constructor(
         }
     }
 
-    fun sendOrder(order: Order,
+    private fun sendOrder(order: Order,
                   onSuccess: () -> Unit,
                   onFailure: () -> Unit){
         viewModelScope.launch {
@@ -207,7 +224,7 @@ class OrdersViewModel @Inject constructor(
         }
     }
 
-    fun getOrderList(clientId: String) {
+    private fun getOrderList(clientId: String) {
         viewModelScope.launch {
             getOrders.execute(clientId).collect{
                 orderList.value = it!!

@@ -6,6 +6,8 @@ import com.example.pizzaproject.domain.models.Client
 import com.example.pizzaproject.domain.models.Order
 import com.example.pizzaproject.domain.models.Product
 import com.example.pizzaproject.utils.OrderStatus
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 val product1 = Product("id1", "Mussarela", 50.0, "pizza")
 val product2 = Product("id2", "Calabresa", 60.0, "pizza")
@@ -49,9 +51,14 @@ class FakeFirestoreDatasource(
         orderList.add(order)
     }
 
-    override suspend fun getOrders(clientId: String): List<Order> {
-        return orderList.filter { it.clientId == clientId }
+    override suspend fun getOrders(clientId: String): Flow<List<Order>?> = flow {
+        emit(orderList)
     }
+
+//    override suspend fun getOrders(clientId: String): Flow<List<Order>> {
+//        return
+////        return orderList.filter { it.clientId == clientId }
+//    }
 
 
 }

@@ -9,7 +9,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
-class DeleteProductFromOrderTest {
+class DeleteProductFromOrderEventTest {
 
     lateinit var dao: FakeOrderDao
 
@@ -29,19 +29,13 @@ class DeleteProductFromOrderTest {
 
     @Test
     fun `should delete the all of the same product from the cart`() = runBlocking{
-
+        assert(dao.orderInProgressList.isEmpty())
         // TODO GOT TO MAKE THIS WORK
         dao.addProductToOrder(productInOrder1)
-//        dao.addProductToOrder(productInOrder1)
-//        dao.addProductToOrder(productInOrder2)
-
-//        assert(dao.orderInProgressList.equals(list3))
-
-        deleteProductFromOrder.execute("Atum")
-
-//        assert(dao.orderInProgressList.equals(list3))
-//        assert(dao.orderInProgressList != list2)
-        assert(dao.orderInProgressList.isEmpty())
+        assert(dao.orderInProgressList.isNotEmpty())
+        deleteProductFromOrder.execute(productInOrder1.product)
+        val list = listOf(productInOrder1)
+        assert(dao.orderInProgressList == list)
 
     }
 

@@ -28,17 +28,17 @@ class GetOrdersTest{
 
         firestore.addOrders(order1, order2)
 
-        val result = getOrders.execute("clientId1").toList()
+        val list = mutableListOf<Order>()
 
-        assert(result[0].loading)
-        val orders = result[1].data
-        assert(orders!!.isNotEmpty())
+            getOrders.execute("clientId1").collect {
+                list.addAll(it!!)
+            }
 
-        assert(firestore.orderList != orders)
+        assert(list.isNotEmpty())
 
-        assert(orders.contains(order1))
 
-        assert(!result[1].loading)
+        assert(list.contains(order1))
+        assert(list.contains(order2))
 
     }
 

@@ -2,6 +2,7 @@ package com.example.pizzaproject.datasource.room
 
 import com.example.pizzaproject.domain.models.CartDetail
 import com.example.pizzaproject.domain.models.OrderInProgress
+import com.example.pizzaproject.domain.models.Product
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -37,12 +38,15 @@ class FakeOrderDao(
 
     override suspend fun deleteProductFromOrder(product: String) {
         if (orderInProgressList.isNotEmpty()) {
-            for (i in orderInProgressList) {
-                if (i.product == product)
-                    orderInProgressList.remove(i)
+            for(i in orderInProgressList){
+                if (i.product == product){
+                    orderInProgressList.remove(OrderInProgress(i.id, i.product, i.price))
+                }
+            }
+
             }
         }
-    }
+
 
     override suspend fun clearCart() {
         orderInProgressList.clear()
@@ -59,6 +63,7 @@ class FakeOrderDao(
             }
 
         }
-    }
+}
+
 
 

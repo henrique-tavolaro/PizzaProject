@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.example.pizzaproject.R
 import com.example.pizzaproject.domain.models.OrderInProgress
 import com.example.pizzaproject.domain.models.Product
+import com.example.pizzaproject.utils.OrdersEvent
 
 @Composable
 fun ProductLazyColumnItem(
@@ -47,8 +48,9 @@ fun ProductLazyColumnItem(
                         product = product.name,
                         price = product.price
                     )
-                    viewModel.addProductToOrder(orderInProgress)
-                    viewModel.getTotalSum()
+                    viewModel.onTriggerEvent(
+                        OrdersEvent.AddProductToOrderEvent(orderInProgress))
+                    viewModel.onTriggerEvent(OrdersEvent.GetTotalSumEvent)
                 },
             ) {
                 Icon(

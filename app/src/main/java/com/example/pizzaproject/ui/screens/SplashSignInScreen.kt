@@ -28,6 +28,7 @@ import com.example.pizzaproject.domain.models.Order
 import com.example.pizzaproject.ui.OrdersViewModel
 import com.example.pizzaproject.ui.composables.GoogleButton
 import com.example.pizzaproject.ui.navigation.Screen
+import com.example.pizzaproject.utils.OrdersEvent
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlinx.coroutines.flow.collect
@@ -56,7 +57,7 @@ fun SplashSignInScreen(
             )
             loggedUser.value = client
             navController.navigate(Screen.HomeScreen.route)
-            viewModel.getOrderList(loggedUser.value!!.id)
+            viewModel.onTriggerEvent(OrdersEvent.GetOrderListEvent(loggedUser.value!!.id))
         } else {
             googleButtonVisibility.value = true
         }
@@ -64,7 +65,7 @@ fun SplashSignInScreen(
 
     if(loggedUser.value != null){
         navController.navigate(Screen.HomeScreen.route)
-        viewModel.getOrderList(loggedUser.value!!.id)
+        viewModel.onTriggerEvent(OrdersEvent.GetOrderListEvent(loggedUser.value!!.id))
     }
 
         Column(
